@@ -18,6 +18,23 @@
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+#toolbar{
+  position:fixed;
+  top:0;
+
+  left: 50%;
+  transform: translate(-50%, 0);
+  
+}
+
+#sidebar {
+  background-color: blueviolet;
+  position:fixed;
+  right:0;
+  top: 50%;
+  transform: translate(0, -50%);
+}
+
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);

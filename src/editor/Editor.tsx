@@ -7,6 +7,8 @@ import RegPolygon from './RegPolygon';
 import { bringDownByOne, bringToTheBottom, bringToTheTop, bringUpByOne } from '../scripts/layers';
 import ObjectList from './ObjectList';
 import ToolBar from './ToolBar';
+import SideBar from './SideBar';
+import type { Shape } from './ShapeType';
 
 const GUIDELINE_OFFSET = 5;
 
@@ -20,17 +22,8 @@ interface lineGuideStop {
     vertical:number[], 
     horizontal:number[]
 }
-interface shape{
-    id: string, // Unique ID for each rectangle
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    fill: string,
-    rotation: number,
-    type: string,
-    name: string
-}
+
+
 interface selectionRec  {
     visible: boolean,
     x1: number,
@@ -39,7 +32,7 @@ interface selectionRec  {
     y2: number
 }
 interface canvasState {
-    shapes: shape[],
+    shapes: Shape[],
     background: any
 }
 
@@ -53,7 +46,7 @@ const getCorner = (pivotX: number, pivotY: number, diffX: number, diffY: number,
   return { x, y };
 };
 
-const getClientRect = (element:shape) => {
+const getClientRect = (element:Shape) => {
   const { x, y, width, height, rotation = 0 } = element;
   const rad = degToRad(rotation);
 
@@ -75,7 +68,7 @@ const getClientRect = (element:shape) => {
   };
 };
 
-const getLineGuideStops = (skipShapeIds: string[], allRectsData: shape[], rectRefs: React.MutableRefObject<Record<string, Konva.Rect | null>>, stageWidth:number, stageHeight: number) => {
+const getLineGuideStops = (skipShapeIds: string[], allRectsData: Shape[], rectRefs: React.MutableRefObject<Record<string, Konva.Rect | null>>, stageWidth:number, stageHeight: number) => {
     // We can snap to stage borders and the center of the stage
     const vertical = [0, stageWidth / 2, stageWidth];
     const horizontal = [0, stageHeight / 2, stageHeight];
@@ -206,12 +199,13 @@ const Editor = () => {
 
     const [stageWidth, setStageWidth] = useState(window.innerWidth);
     const [stageHeight, setStageHeight] = useState(window.innerHeight);
-    const [shapes, setShapes] = useState<shape[]>([]);
+    const [shapes, setShapes] = useState<Shape[]>([]);
     const [guides, setGuides] = useState<Guide[]>([]);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [color, setColor] = useState<string>("#ffffff");
     const [tool, setTool] = useState<"none"| "rectangle" | "circle" | "polygon">("rectangle");
-    const history = useRef<canvasState[]>([])
+    const history = useRef<canvasState[]>([]);
+    const redoStack =  useRef<canvasState[]>([]);
     const [selectionRectangle, setSelectionRectangle] = useState<selectionRec>({
         visible: false,
         x1: 0,
@@ -219,6 +213,7 @@ const Editor = () => {
         x2: 0,
         y2: 0,
     });
+    const [corners,setCorners] = useState<number>(0);
 
     const rectRefs = useRef<Record<string, Konva.Rect | null>>({});
     const transformerRef = useRef<Konva.Transformer | null>(null);
@@ -228,16 +223,25 @@ const Editor = () => {
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Delete' && selectedIds.length > 0) {
-                setShapes(prevShapes => prevShapes.filter(shape => !selectedIds.includes(shape.id)));
                 saveState();
+                setShapes(prevShapes => prevShapes.filter(shape => !selectedIds.includes(shape.id)));
                 setSelectedIds([]);
             }
 
-            if((e.ctrlKey || e.metaKey) && e.key === 'z' && history.current.length > 1){
+            if((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z' && history.current.length > 0){
                 const popped = popFromHistory();
-                const previousState = history.current.at(-1);
-                if (previousState) {
-                    setShapes(previousState.shapes);
+                console.log(popped, history)
+                if (popped) {
+                    setShapes(popped.shapes);
+                }
+            }
+            if((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Z'){
+                
+                const redo = redoStack.current.pop();
+                console.log(redo)
+                
+                if(redo){
+                    setShapes(redo.shapes);
                 }
             }
 
@@ -260,8 +264,9 @@ const Editor = () => {
                 const clipboardData = localStorage.getItem('shapesClipboard');
                 if (clipboardData) {
                     const newShapes = JSON.parse(clipboardData);
-                    setShapes(prevShapes => [...prevShapes, ...newShapes]);
                     saveState();
+                    setShapes(prevShapes => [...prevShapes, ...newShapes]);
+                    
                     setSelectedIds(newShapes.map(shape => shape.id));
                 }
             }
@@ -269,7 +274,7 @@ const Editor = () => {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [selectedIds, shapes]); // Add dependencies
+    }, [selectedIds, shapes, history]); // Add dependencies
 
     // Initialize stage dimensions on resize
     useEffect(() => {
@@ -291,8 +296,9 @@ const Editor = () => {
                 name: "Rectangle" + (i + 1)
             });
         }
-        setShapes(initialRects);
         saveState();
+        setShapes(initialRects);
+        
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
 
@@ -323,12 +329,14 @@ const Editor = () => {
   }, [selectedIds]);
 
   // Separate effect for color updates
-  useEffect(() => {
-    if (selectedIds.length > 0) {  // Only update color if there's an actual selection
-      const newColor = shapes.find(x => x.id === selectedIds[0])?.fill;
-      if (newColor) setColor(newColor);
-    }
-  }, [selectedIds, shapes]);
+    useEffect(() => {
+        if (selectedIds.length > 0) {  // Only update color if there's an actual selection
+            const newColor = shapes.find(x => x.id === selectedIds[0])?.fill;
+            if (newColor) setColor(newColor);
+            const newCorner = shapes.find(x => x.id === selectedIds[0])?.corners;
+            setCorners(newCorner || 0); 
+        }
+    }, [selectedIds, shapes]);
 
     const handleDragMove = (e: KonvaEventObject<DragEvent>) => {
         const draggedNode = e.target as Konva.Rect;
@@ -360,7 +368,6 @@ const Editor = () => {
             });
             draggedNode.absolutePosition(absPos); // Update Konva node directly for immediate visual feedback
         }
-
         // Update the state for the dragged rectangle's position
         setShapes((prevRects) =>
             prevRects.map((rect) =>
@@ -380,6 +387,7 @@ const Editor = () => {
         const draggedNode = e.target;
         if(!draggedNode) return
         const draggedRectId = draggedNode.id();
+        
         setShapes((prevRects) =>
             prevRects.map((rect) =>
                 rect.id === draggedRectId
@@ -387,8 +395,8 @@ const Editor = () => {
                     : rect
                 )
         );
-        saveState();
-        console.log(history)
+        
+        console.log(history.current)
     };
 
     const handleTransformEnd = (e: KonvaEventObject<Event>) => {
@@ -396,6 +404,7 @@ const Editor = () => {
     const node = e.target as Konva.Rect;
     const id = node.id();
     
+    saveState();
     setShapes(prevRects => {
       const newRects = [...prevRects];
       const index = newRects.findIndex(r => r.id === id);
@@ -428,7 +437,6 @@ const Editor = () => {
       
       return newRects;
     });
-    saveState();
   };
 
     const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
@@ -551,6 +559,7 @@ const Editor = () => {
     }
 
     const handleColorChange = (color: ColorResult) => {
+        saveState();
         setColor(color.hex);
         setShapes((prevRects) =>
             prevRects.map((rect) =>
@@ -559,11 +568,10 @@ const Editor = () => {
                     : rect
             )
         );
-        
     }
 
 
-    const renderShape = (shape: shape) => {
+    const renderShape = (shape: Shape) => {
         const props = {
             id: shape.id,
             x: shape.x,
@@ -575,8 +583,10 @@ const Editor = () => {
             radiusY: Math.abs(shape.height/2),
             rotation:shape.rotation,
             draggable : true,
+            cornerRadius: shape.corners,
             onClick:handleShapeClick,
             onDragMove:handleDragMove,
+            onDragStart: saveState,
             onDragEnd:handleDragEnd,
             onTransformEnd:(e: any) =>handleTransformEnd(e),
             ref:(node: any) => {
@@ -599,6 +609,7 @@ const Editor = () => {
 
     const spawnRectangle = (x1:number,x2:number,y1:number,y2:number) => {
         const temp = shapes.slice();
+        saveState();
         temp.push({
             id: `rect-${temp.length}`, // Unique ID for each rectangle
             x: x1,
@@ -611,23 +622,24 @@ const Editor = () => {
             name: getNextItemName("rectangle")
         })
         setShapes(temp);
-        saveState();
+        
     }
     const spawnPolygon = (x1:number,x2:number,y1:number,y2:number) => {
         const temp = shapes.slice();
         temp.push({
             id: `rect-${temp.length}`, // Unique ID for each rectangle
-            x: x1 + (x2 - x1)/2,
-            y: y1 + (y2 - y1)/2,
+            x: x1,
+            y: y1,
             width: x2 - x1,
-            height: Math.abs(y2 - y1),
+            height: y2 - y1,
             fill: Konva.Util.getRandomColor(),
             rotation: 0,
             type: "regular",
             name: getNextItemName("regular")
         })
-        setShapes(temp);
         saveState();
+        setShapes(temp);
+        
     }
     const spawnCircle = (x1:number,x2:number,y1:number,y2:number) => {
         const temp = shapes.slice();
@@ -642,18 +654,19 @@ const Editor = () => {
             type: "circle",
             name: getNextItemName("circle"),
         })
-        setShapes(temp);
         saveState();
+        setShapes(temp);
+        
     }
 
     const getIndex = (item: string) => {
         return shapes.findIndex(x => x.id === item)
     }
 
-    const moveUp = () => {setShapes(bringUpByOne(shapes, selectedIds.map(getIndex))); saveState()}
-    const moveDown = () => {setShapes(bringDownByOne(shapes, selectedIds.map(getIndex))); saveState();}
-    const moveTop = () => {setShapes(bringToTheTop(shapes, selectedIds.map(getIndex))); saveState();}
-    const moveBottom = () =>{setShapes(bringToTheBottom(shapes, selectedIds.map(getIndex))); saveState();}
+    const moveUp = () => {saveState(); setShapes(bringUpByOne(shapes, selectedIds.map(getIndex))); }
+    const moveDown = () => {saveState();setShapes(bringDownByOne(shapes, selectedIds.map(getIndex))); }
+    const moveTop = () => {saveState(); setShapes(bringToTheTop(shapes, selectedIds.map(getIndex))); }
+    const moveBottom = () =>{saveState();setShapes(bringToTheBottom(shapes, selectedIds.map(getIndex))); }
 
     const getNextItemName = (type: string) => {
         let circles = 1;
@@ -675,7 +688,108 @@ const Editor = () => {
         history.current.push({shapes: shapes, background: null});
     }
     const popFromHistory = () => {
-        return history.current.pop();
+        redoStack.current.push({shapes: shapes, background: null});
+        const popped = history.current.pop();
+        
+        console.log(redoStack.current);
+        return popped
+    }
+
+    const resizeSnap = (oldPos: { x: number; y: number }, newPos: { x: number; y: number }) => {
+        // If no shapes are selected, return the original position
+        if (selectedIds.length === 0) return newPos;
+
+        const draggedRectId = selectedIds[0];
+        const draggedNode = rectRefs.current[draggedRectId];
+        if (!draggedNode) return newPos;
+
+        // Calculate snap threshold
+        const SNAP_THRESHOLD = 5;
+
+        // Clear existing guides
+        setGuides([]);
+
+        // Get all possible snap points from other shapes
+        const snapPoints: Array<{ x?: number, y?: number }> = [];
+        shapes.forEach(shape => {
+            if (shape.id !== draggedRectId) {
+                // Add edge points
+                snapPoints.push(
+                    { x: shape.x }, // Left
+                    { x: shape.x + shape.width }, // Right
+                    { x: shape.x + shape.width / 2 }, // Center X
+                    { y: shape.y }, // Top
+                    { y: shape.y + shape.height }, // Bottom
+                    { y: shape.y + shape.height / 2 } // Center Y
+                );
+            }
+        });
+
+        // Add stage boundaries and center lines
+        snapPoints.push(
+            { x: 0 }, { x: stageWidth }, { x: stageWidth / 2 },
+            { y: 0 }, { y: stageHeight }, { y: stageHeight / 2 }
+        );
+
+        let snappedPos = { ...newPos };
+        let closestSnapX = Infinity;
+        let closestSnapY = Infinity;
+        let activeGuides: Guide[] = [];
+
+        // Find closest snap points
+        snapPoints.forEach(point => {
+            if (point.x !== undefined) {
+                const diff = Math.abs(newPos.x - point.x);
+                if (diff < SNAP_THRESHOLD && diff < closestSnapX) {
+                    closestSnapX = diff;
+                    snappedPos.x = point.x;
+                    activeGuides.push({
+                        lineGuide: point.x,
+                        offset: 0,
+                        orientation: 'V',
+                        snap: 'edge'
+                    });
+                }
+            }
+            if (point.y !== undefined) {
+                const diff = Math.abs(newPos.y - point.y);
+                if (diff < SNAP_THRESHOLD && diff < closestSnapY) {
+                    closestSnapY = diff;
+                    snappedPos.y = point.y;
+                    activeGuides.push({
+                        lineGuide: point.y,
+                        offset: 0,
+                        orientation: 'H',
+                        snap: 'edge'
+                    });
+                }
+            }
+        });
+
+        // Update guides visualization only if we have active snap points
+        if (activeGuides.length > 0) {
+            setGuides(activeGuides);
+        }
+
+        return snappedPos;
+
+    }
+
+    const handleCornersChange = (value: number) =>{
+        console.log(value)
+        
+        setCorners(value);
+
+        const temp = shapes.map(x => {
+            if(selectedIds.includes(x.id)){
+                console.log(x.id)
+                return {...x, corners: value}
+            }
+            else return x
+        });
+        console.log(temp)
+        saveState();
+        setShapes(temp);
     }
 
 
@@ -707,7 +821,7 @@ const Editor = () => {
             ref={transformerRef}
             rotationSnaps={[0,45, 90, 135, 180, 225, 270, 315]}
             rotationSnapTolerance={5}
-            //anchorDragBoundFunc={handleResizeBound}
+            anchorDragBoundFunc={resizeSnap}
             
             />
         {selectionRectangle.visible && (
@@ -743,10 +857,10 @@ const Editor = () => {
                 )}
                 {tool === "polygon" && (
                     <RegPolygon
-                        x={selectionRectangle.x1 + (selectionRectangle.x2 - selectionRectangle.x1)/2}
-                        y={selectionRectangle.y1 + (selectionRectangle.y2 - selectionRectangle.y1)/2}
-                        width={Math.abs(selectionRectangle.x2 - selectionRectangle.x1)}
-                        height={Math.abs(selectionRectangle.y2 - selectionRectangle.y1)}
+                        x={selectionRectangle.x1}
+                        y={selectionRectangle.y1}
+                        width={selectionRectangle.x2 - selectionRectangle.x1}
+                        height={selectionRectangle.y2 - selectionRectangle.y1}
                         fill="rgba(0,0,255,0.2)"
                     />
                 )}
@@ -758,7 +872,19 @@ const Editor = () => {
     
     <ToolBar polygon={() => setTool("polygon")} circle={() => setTool("circle")} rectangle={() => setTool("rectangle")}/>
     <ObjectList selected={selectedIds} setSelected={setSelectedIds} shapes={shapes} setShapes={setShapes}/>
-
+    <SideBar 
+        selectedIds={selectedIds} 
+        setSelectedIds={setSelectedIds} 
+        color={color} 
+        setColor={handleColorChange} 
+        moveUp={moveUp} 
+        moveDown={moveDown} 
+        moveTop={moveTop} 
+        moveBottom={moveBottom} 
+        corners={corners}
+        setCorners={handleCornersChange}
+        />
+        
 
 
     </>

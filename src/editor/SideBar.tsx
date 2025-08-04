@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { Colorful, type ColorResult } from "@uiw/react-color"
+import ReactSlider from 'react-slider'
 
 interface SideBarProps{
     selectedIds: string[],
@@ -10,6 +11,8 @@ interface SideBarProps{
     moveDown : () => void,
     moveTop : () => void,
     moveBottom : () => void,
+    setCorners : (value: number) => void,
+    corners: number
 }
 
 
@@ -21,13 +24,24 @@ const SideBar = (props: SideBarProps) => {
       
     }, [props.selectedIds])
   return (
-    <div>
+    <div id="sidebar">
       <h3>Color</h3>
       <Colorful
         color={props.color}
         onChange={props.setColor}
       />
       <h3>Order</h3>
+      <button onClick={props.moveUp}>Up</button>
+      <button onClick={props.moveDown}>Down</button>
+      <button onClick={props.moveTop}>Top</button>
+      <button onClick={props.moveBottom}>Bottom</button>
+      <input
+        type="range"
+        min="0"
+        max="100"
+        value={props.corners}
+        onChange={(e) =>props.setCorners(Number(e.target.value))}
+      />
     </div>
   )
 }

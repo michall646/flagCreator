@@ -1,14 +1,16 @@
-import { Stage, Layer, Line, Rect, Transformer, Circle, Ellipse } from 'react-konva';
+import { Stage, Layer, Line, Rect, Transformer, Ellipse, Circle } from 'react-konva';
 import { useState, useEffect, useRef } from 'react';
 import Konva from 'konva';
 import type { KonvaEventObject, Node, NodeConfig } from 'konva/lib/Node';
-import { Colorful, type ColorResult } from '@uiw/react-color';
+import { type ColorResult } from '@uiw/react-color';
 import RegPolygon from './RegPolygon';
 import { bringDownByOne, bringToTheBottom, bringToTheTop, bringUpByOne } from '../scripts/layers';
 import ObjectList from './ObjectList';
 import ToolBar from './ToolBar';
 import SideBar from './SideBar';
 import type { Shape } from './ShapeType';
+import type { Gradient } from './GradientType';
+import { gradientProps } from '../scripts/getGradientProps';
 
 const GUIDELINE_OFFSET = 5;
 
@@ -194,6 +196,7 @@ function getGuides(lineGuideStops: lineGuideStop, itemBounds:any) {
     return guides;
 }
 
+
 const Editor = () => {
 
 
@@ -214,10 +217,22 @@ const Editor = () => {
         y2: 0,
     });
     const [corners,setCorners] = useState<number>(0);
+    const [sides, setSides] = useState<number>(-1);
+
+    const [selectedStop, setSelectedStop] = useState<number>(-1);
 
     const rectRefs = useRef<Record<string, Konva.Rect | null>>({});
     const transformerRef = useRef<Konva.Transformer | null>(null);
     const isSelecting = useRef<boolean>(false);
+
+    const [gradient, setGradient] = useState<Gradient>({
+        start: {x: 50, y: 50},
+        end: {x: 17, y:50},
+        startRadius: 0,
+        endRadius: 50,
+        colorStops: [0, 'yellow', 1, 'black'],
+    })
+
 
     // Handle keyboard events
     useEffect(() => {
@@ -263,7 +278,7 @@ const Editor = () => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
                 const clipboardData = localStorage.getItem('shapesClipboard');
                 if (clipboardData) {
-                    const newShapes = JSON.parse(clipboardData);
+                    const newShapes: Shape[] = JSON.parse(clipboardData);
                     saveState();
                     setShapes(prevShapes => [...prevShapes, ...newShapes]);
                     
@@ -281,23 +296,8 @@ const Editor = () => {
         const handleResize = () => {
             setStageWidth(window.innerWidth);
             setStageHeight(window.innerHeight);
-        };
-        const initialRects = [];
-        for (let i = 0; i < 5; i++) {
-            initialRects.push({
-                id: `rect-${i}`, // Unique ID for each rectangle
-                x: Math.random() * stageWidth,
-                y: Math.random() * stageHeight,
-                width: 50 + Math.random() * 50,
-                height: 50 + Math.random() * 50,
-                fill: Konva.Util.getRandomColor(),
-                rotation: Math.random() * 360,
-                type: "rectangle",
-                name: "Rectangle" + (i + 1)
-            });
         }
         saveState();
-        setShapes(initialRects);
         
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
@@ -331,10 +331,12 @@ const Editor = () => {
   // Separate effect for color updates
     useEffect(() => {
         if (selectedIds.length > 0) {  // Only update color if there's an actual selection
-            const newColor = shapes.find(x => x.id === selectedIds[0])?.fill;
-            if (newColor) setColor(newColor);
+            //const newColor = shapes.find(x => x.id === selectedIds[0])?.fill;
+            //if (newColor) setColor(newColor);
             const newCorner = shapes.find(x => x.id === selectedIds[0])?.corners;
             setCorners(newCorner || 0); 
+            const newSides = shapes.find(x => x.id === selectedIds[0])?.sides;
+            setSides(newSides || -1); 
         }
     }, [selectedIds, shapes]);
 
@@ -504,10 +506,11 @@ const Editor = () => {
     };
     const handleMouseMove = (e:Konva.KonvaEventObject<MouseEvent>) => {
         // Do nothing if we didn't start selection
-        if (!isSelecting.current) return;
-        const pos = e.target.getStage().getPointerPosition();
+        if (!isSelecting.current||e.target.getStage() === null) return;
+        const pos = e.target.getStage()?.getPointerPosition();
+        if (!pos) return;
         let x2 = pos.x;
-        let y2 = pos.y
+        let y2 = pos.y;
         console.log(e);
         if(e.evt.shiftKey){
             const width = x2 - selectionRectangle.x1;
@@ -560,30 +563,61 @@ const Editor = () => {
 
     const handleColorChange = (color: ColorResult) => {
         saveState();
+        
+        
+        if (selectedStop >= 0) {
+            // Update color stop in gradient
+            const temp = {...gradient};
+            temp.colorStops = [...temp.colorStops];
+            temp.colorStops[selectedStop + 1] = color.hex;  // +1 because colors are at odd indices
+            
+            setGradient(temp);
+            setShapes((prevRects) =>
+                prevRects.map((rect) =>
+                    selectedIds.includes(rect.id)
+                        ? { 
+                            ...rect, 
+                            gradient: {...temp},
+                            fillType: rect.fillType // Preserve the existing fillType
+                          }
+                        : rect
+                )
+            );
+        } else {
+            // Update fill color as before
+            setShapes((prevRects) =>
+                prevRects.map((rect) =>
+                    selectedIds.includes(rect.id)
+                        ? { 
+                            ...rect, 
+                            fill: color.hex,
+                            fillType: rect.fillType // Preserve the existing fillType
+                          }
+                        : rect
+                )
+            );
+        }
         setColor(color.hex);
-        setShapes((prevRects) =>
-            prevRects.map((rect) =>
-                selectedIds.includes(rect.id)
-                    ? { ...rect, fill:color.hex }
-                    : rect
-            )
-        );
     }
 
 
     const renderShape = (shape: Shape) => {
+
+        const gradient = gradientProps(shape);
+        
         const props = {
             id: shape.id,
             x: shape.x,
             y: shape.y,
             width: shape.width,
             height: shape.height,
-            fill: shape.fill,
             radiusX: Math.abs(shape.width/2),
             radiusY: Math.abs(shape.height/2),
             rotation:shape.rotation,
             draggable : true,
+            sides: shape.sides,
             cornerRadius: shape.corners,
+            ...gradient,
             onClick:handleShapeClick,
             onDragMove:handleDragMove,
             onDragStart: saveState,
@@ -595,6 +629,7 @@ const Editor = () => {
                 }
             }
         }
+        console.log(props)
         if(shape.type === "rectangle"){
             return <Rect key={shape.id} {...props}/>
         }
@@ -619,7 +654,9 @@ const Editor = () => {
             fill: Konva.Util.getRandomColor(),
             rotation: 0,
             type: "rectangle",
-            name: getNextItemName("rectangle")
+            name: getNextItemName("rectangle"),
+            fillType: "linear",
+            gradient: { ...gradient }
         })
         setShapes(temp);
         
@@ -634,8 +671,10 @@ const Editor = () => {
             height: y2 - y1,
             fill: Konva.Util.getRandomColor(),
             rotation: 0,
+            sides: sides > 3? sides: 3,
             type: "regular",
-            name: getNextItemName("regular")
+            name: getNextItemName("regular"),
+            fillType: "solid"
         })
         saveState();
         setShapes(temp);
@@ -653,6 +692,7 @@ const Editor = () => {
             rotation: 0,
             type: "circle",
             name: getNextItemName("circle"),
+            fillType: "solid"
         })
         saveState();
         setShapes(temp);
@@ -695,7 +735,7 @@ const Editor = () => {
         return popped
     }
 
-    const resizeSnap = (oldPos: { x: number; y: number }, newPos: { x: number; y: number }) => {
+    const resizeSnap = (_oldPos: { x: number; y: number }, newPos: { x: number; y: number }) => {
         // If no shapes are selected, return the original position
         if (selectedIds.length === 0) return newPos;
 
@@ -776,7 +816,6 @@ const Editor = () => {
     }
 
     const handleCornersChange = (value: number) =>{
-        console.log(value)
         
         setCorners(value);
 
@@ -790,6 +829,180 @@ const Editor = () => {
         console.log(temp)
         saveState();
         setShapes(temp);
+    }
+
+    const handleSidesChange = (value: number) => {
+
+        setSides(value)
+        const temp = shapes.map(x => {
+            if(selectedIds.includes(x.id)){
+                console.log(x.id)
+                return {...x, sides: value}
+            }
+            else return x
+        });
+        saveState();
+        setShapes(temp);
+    }
+
+    const startPointMove = (e: KonvaEventObject<DragEvent>) => {
+        // Get the currently selected shape
+        const selectedShape = shapes.find(x => selectedIds.includes(x.id));
+        if (!selectedShape) return;
+
+        // Calculate relative position within the shape
+        const relativeX = (e.target.x() - selectedShape.x) / selectedShape.width * 100;
+        const relativeY = (e.target.y() - selectedShape.y) / selectedShape.height * 100;
+
+        const temp = {
+            ...gradient,
+            start: {
+                x: relativeX,
+                y: relativeY
+            }
+        };
+        
+        setShapes(shapes.map(x => {
+            if(selectedIds.includes(x.id)) {
+                return {...x, gradient: {...temp}, fillType: "linear"}
+            }
+            return x
+        }));
+        setGradient(temp);
+        saveState();
+    }
+
+    const endPointMove = (e: KonvaEventObject<DragEvent>) => {
+        // Get the currently selected shape
+        const selectedShape = shapes.find(x => selectedIds.includes(x.id));
+        if (!selectedShape) return;
+
+        // Calculate relative position within the shape
+        const relativeX = (e.target.x() - selectedShape.x) / selectedShape.width * 100;
+        const relativeY = (e.target.y() - selectedShape.y) / selectedShape.height * 100;
+
+        const temp = {
+            ...gradient,
+            end: {
+                x: relativeX,
+                y: relativeY
+            }
+        };
+        
+        setShapes(shapes.map(x => {
+            if(selectedIds.includes(x.id)) {
+                return {...x, gradient: {...temp}, fillType: "linear"}
+            }
+            return x
+        }));
+        setGradient(temp);
+        saveState();
+    }
+
+    const handleGradientClick = (e:KonvaEventObject<MouseEvent>) => {
+        const selectedShape = shapes.find(x => x.id === selectedIds[0]);
+        if (!selectedShape) return;
+        
+        // Get click position relative to stage
+        const stage = e.target.getStage();
+        if (!stage) return;
+        const pos = stage.getPointerPosition();
+        if (!pos) return;
+
+        // Calculate position as percentage relative to shape
+        const relativeX = (pos.x - selectedShape.x) / selectedShape.width * 100;
+        const relativeY = (pos.y - selectedShape.y) / selectedShape.height * 100;
+
+        // Calculate where on the line this point is (0-1)
+        const startX = gradient.start.x;
+        const startY = gradient.start.y;
+        const endX = gradient.end.x;
+        const endY = gradient.end.y;
+        console.log(startX, startY)
+        
+        // Calculate the relative position (0-1) along the gradient line
+        const dx = endX - startX;
+        const dy = endY - startY;
+        const t = ((relativeX - startX) * dx + (relativeY - startY) * dy) / (dx * dx + dy * dy);
+        
+        // Clamp t between 0 and 1
+        const position = Math.max(0, Math.min(1, t));
+
+        // Add new color stop
+        const temp = {...gradient};
+        temp.colorStops = [...temp.colorStops];
+        // Insert new stop at the calculated position
+        temp.colorStops.splice(temp.colorStops.length - 2, 0, position, '#ffffff');
+        
+        setShapes(shapes.map(x => {
+            if(selectedIds.includes(x.id)) {
+                return {...x, gradient: temp, fillType: "linear"}
+            }
+            return x
+        }));
+        setGradient(temp);
+        saveState();
+    }
+
+    const renderColorStop = (stop: number | string, i: number) => {
+        if (i % 2 === 0 && i > 0 && i < gradient.colorStops.length - 2) {
+            const position = stop as number;
+            const color = gradient.colorStops[i + 1] as string;
+            const x = shapes.find(x => x.id === selectedIds[0])!.x + 
+                (gradient.start.x + (gradient.end.x - gradient.start.x) * position) * 
+                shapes.find(x => x.id === selectedIds[0])!.width / 100;
+            const y = shapes.find(x => x.id === selectedIds[0])!.y + 
+                (gradient.start.y + (gradient.end.y - gradient.start.y) * position) * 
+                shapes.find(x => x.id === selectedIds[0])!.height / 100;
+            
+            return (
+                <Circle
+                    key={i}
+                    radius={4}
+                    x={x}
+                    y={y}
+                    fill={color}
+                    stroke="#000"
+                    strokeWidth={1}
+                    draggable
+                    onDragMove={(e) => {
+                        const selectedShape = shapes.find(x => x.id === selectedIds[0]);
+                        if (!selectedShape) return;
+
+                        // Calculate new position along the gradient line
+                        const relativeX = (e.target.x() - selectedShape.x) / selectedShape.width * 100;
+                        const relativeY = (e.target.y() - selectedShape.y) / selectedShape.height * 100;
+                        
+                        const startX = gradient.start.x;
+                        const startY = gradient.start.y;
+                        const endX = gradient.end.x;
+                        const endY = gradient.end.y;
+                        
+                        const dx = endX - startX;
+                        const dy = endY - startY;
+                        const t = ((relativeX - startX) * dx + (relativeY - startY) * dy) / (dx * dx + dy * dy);
+                        const position = Math.max(0, Math.min(1, t));
+
+                        // Update color stop position
+                        const temp = {...gradient};
+                        temp.colorStops = [...temp.colorStops];
+                        temp.colorStops[i] = position;
+
+                        setShapes(shapes.map(x => {
+                            if(selectedIds.includes(x.id)) {
+                                return {...x, gradient: temp, fillType: "linear"}
+                            }
+                            return x
+                        }));
+                        setGradient(temp);
+                    }}
+                    onClick={() => {
+                        setSelectedStop(i);
+                    }}
+                />
+            );
+        }
+        return null;
     }
 
 
@@ -866,6 +1079,40 @@ const Editor = () => {
                 )}
             </>
             )}
+        {/*Gradient Controls */}
+        {selectedIds.length === 1 && shapes.find(x => x.id === selectedIds[0])?.fillType === "linear" && (
+            <>
+                <Line
+                    points={[
+                        shapes.find(x => x.id === selectedIds[0])!.x + (gradient.start.x * shapes.find(x => x.id === selectedIds[0])!.width / 100),
+                        shapes.find(x => x.id === selectedIds[0])!.y + (gradient.start.y * shapes.find(x => x.id === selectedIds[0])!.height / 100),
+                        shapes.find(x => x.id === selectedIds[0])!.x + (gradient.end.x * shapes.find(x => x.id === selectedIds[0])!.width / 100),
+                        shapes.find(x => x.id === selectedIds[0])!.y + (gradient.end.y * shapes.find(x => x.id === selectedIds[0])!.height / 100)
+                    ]}
+                    stroke="#999"
+                    strokeWidth={2}
+                    onClick={handleGradientClick}
+                />
+                <Circle
+                    radius={6}
+                    onDragMove={startPointMove}
+                    x={shapes.find(x => x.id === selectedIds[0])!.x + (gradient.start.x * shapes.find(x => x.id === selectedIds[0])!.width / 100)}
+                    y={shapes.find(x => x.id === selectedIds[0])!.y + (gradient.start.y * shapes.find(x => x.id === selectedIds[0])!.height / 100)}
+                    fill="blue"
+                    draggable
+                />
+                <Circle
+                    radius={6}
+                    onDragMove={endPointMove}
+                    x={shapes.find(x => x.id === selectedIds[0])!.x + (gradient.end.x * shapes.find(x => x.id === selectedIds[0])!.width / 100)}
+                    y={shapes.find(x => x.id === selectedIds[0])!.y + (gradient.end.y * shapes.find(x => x.id === selectedIds[0])!.height / 100)}
+                    fill="green"
+                    draggable
+                />
+                {/* Color stop points */}
+                {gradient.colorStops.map(renderColorStop)}
+            </>
+        )}
       </Layer>
     </Stage>
     
@@ -883,6 +1130,8 @@ const Editor = () => {
         moveBottom={moveBottom} 
         corners={corners}
         setCorners={handleCornersChange}
+        sides={sides}
+        setSides={handleSidesChange}
         />
         
 

@@ -1,3 +1,5 @@
+import type { Gradient } from "./GradientType";
+
 export interface Shape {
     id: string, // Unique ID for each rectangle
     x: number,
@@ -6,9 +8,10 @@ export interface Shape {
     height: number,
     fill: string,
     rotation: number,
+    sides? : number,
     type: string,
     name: string,
     corners? : number;
-    isGradient?: boolean;
-    //gradient? : any
+    fillType: "solid"|"linear"|"radial";
+    gradient? : Gradient
 }

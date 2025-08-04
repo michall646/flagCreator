@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react"
 import { Colorful, type ColorResult } from "@uiw/react-color"
-import ReactSlider from 'react-slider'
 
 interface SideBarProps{
     selectedIds: string[],
@@ -12,20 +11,24 @@ interface SideBarProps{
     moveTop : () => void,
     moveBottom : () => void,
     setCorners : (value: number) => void,
-    corners: number
+    corners: number,
+    sides: number,
+    setSides: (value:number) => void,
 }
 
 
 const SideBar = (props: SideBarProps) => {
     const [colorOpened, setColorOpened] = useState<boolean>(false);
-    const [sidesSlider, setSidesSlider] = useState<number>(3);
 
-    useEffect(() => {
-      
-    }, [props.selectedIds])
+    console.log(props.sides)
   return (
     <div id="sidebar">
-      <h3>Color</h3>
+      <h3>Fill</h3>
+      <select>
+        <option>plain</option>
+        <option>linear gradient</option>
+        <option>radial gradient</option>
+      </select>
       <Colorful
         color={props.color}
         onChange={props.setColor}
@@ -35,6 +38,7 @@ const SideBar = (props: SideBarProps) => {
       <button onClick={props.moveDown}>Down</button>
       <button onClick={props.moveTop}>Top</button>
       <button onClick={props.moveBottom}>Bottom</button>
+      <hr></hr>
       <input
         type="range"
         min="0"
@@ -42,6 +46,16 @@ const SideBar = (props: SideBarProps) => {
         value={props.corners}
         onChange={(e) =>props.setCorners(Number(e.target.value))}
       />
+      <hr></hr>
+      {props.sides !== -1 &&
+        <input
+        type="range"
+        min="3"
+        max="12"
+        value={props.sides}
+        onChange={(e) =>props.setSides(Number(e.target.value))}
+      />}
+      
     </div>
   )
 }

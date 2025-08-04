@@ -11,13 +11,15 @@
   },
   "dependencies": {
     "@uiw/react-color": "^2.7.2",
+    "canvg": "^4.0.3",
     "konva": "^9.3.22",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-edit-text": "^5.1.1",
     "react-editext": "^7.1.0",
     "react-konva": "^19.0.7",
-    "react-slider": "^2.0.6"
+    "react-slider": "^2.0.6",
+    "use-image": "^1.1.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

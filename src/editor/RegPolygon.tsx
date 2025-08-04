@@ -1,5 +1,4 @@
-import { RegularPolygon, Shape } from "react-konva";
-import { useRef } from "react";
+import { Shape } from "react-konva";
 
 interface RegPolygonProps {
     width: number;
@@ -9,6 +8,7 @@ interface RegPolygonProps {
     fill: string;
     cornerRadius?: number;
     rotation?: number;
+    sides?: number
     [key: string]: any; // for other Konva properties
 }
 
@@ -17,7 +17,7 @@ const RegPolygon = (shapeProps: RegPolygonProps) => {
     const width = shapeProps.width;
     const height = shapeProps.height;
     const cornerRadius = shapeProps.cornerRadius || 0;
-    const sides = 3;
+    const sides = shapeProps.sides || 3;
     
     return (
       <>
@@ -27,7 +27,6 @@ const RegPolygon = (shapeProps: RegPolygonProps) => {
           scaleY={height/width}
           sceneFunc={(context, shape) => {
             context.beginPath();
-            const sides = 3;
             const radius = Math.min(width, height) / 2;
             const angleStep = (Math.PI * 2) / sides;
             const centerX = width / 2;

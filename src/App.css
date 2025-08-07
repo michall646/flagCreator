@@ -5,6 +5,10 @@
   text-align: center;
 }
 
+body {
+  background-color: #888;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -28,11 +32,20 @@
 }
 
 #sidebar {
-  background-color: blueviolet;
+  background-color: rgb(222, 225, 227);
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  gap:5px;
+  padding: 5px;
+  margin: 10px;
   position:fixed;
   right:0;
   top: 50%;
   transform: translate(0, -50%);
+  overflow: auto;
+  max-height: 80%;
 }
 
 @keyframes logo-spin {
@@ -56,4 +69,21 @@
 
 .read-the-docs {
   color: #888;
+}
+
+#objectList {
+  background-color: rgb(222, 225, 227);
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  gap:5px;
+  padding: 5px;
+  margin: 10px;
+  position:fixed;
+  left:0;
+  top: 50%;
+  transform: translate(0, -50%);
+  overflow: auto;
+  max-height: 80%;
 }

@@ -2,7 +2,9 @@
 import type { Shape } from "../editor/ShapeType";
 
 export const gradientProps = (shape: Shape) =>{
-    if(shape.fillType === "solid" || !shape.gradient) return {};
+    if(shape.fillType === "solid" || !shape.gradient) return {
+        fill:shape.fill
+    };
     if(shape.fillType === "linear") return {
         fillLinearGradientStartPoint: shape.gradient.start,
         fillLinearGradientEndPoint: shape.gradient.end,

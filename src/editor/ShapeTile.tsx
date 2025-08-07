@@ -1,6 +1,8 @@
 
 import { Rect, Circle, Stage, Layer } from 'react-konva';
 import RegPolygon from './RegPolygon';
+import { gradientProps } from '../scripts/getGradientProps';
+import type { Shape } from './ShapeType';
 
 interface shape{
     id: string, // Unique ID for each rectangle
@@ -54,18 +56,20 @@ const ShapeTile = ({shape, change, editingId, setEditingId, selected, handleSele
 
     }
 
-    const renderShape = (shape: any) => {
+    const renderShape = (shape: Shape) => {
         const ICON_SIZE = 30;
         const scaleX = ICON_SIZE / shape.width;
         const scaleY = ICON_SIZE / shape.height;
         const scale = Math.min(scaleX, scaleY);
+        const gradient = gradientProps(shape)
         const props = {
           x: 0,
           y: 0,
-          width: shape.width * scale,
-          height: shape.height * scale,
-          fill: shape.fill,
-          rotation:0
+          width: shape.width,
+          height: shape.height,
+          ...gradient,
+          rotation:0,
+          scale: {x: scale, y:scale}
         }
         const shapeOffset = {x: shape.width * scale / 2, y: shape.height * scale / 2}
         if(shape.type === "rectangle"){
@@ -83,9 +87,9 @@ const ShapeTile = ({shape, change, editingId, setEditingId, selected, handleSele
     const ShapeIcon = renderShape(shape);
 
     const isSelected = selected.includes(shape.id);
-    const bg = isSelected? 'blue':'transparent';
+    const bg = isSelected? '#73bbffff':'transparent';
   return (
-    <div style={{ padding: '10px', border: '1px solid #ccc',  backgroundColor: bg}} onClick={handleClick} className='shapeTile'>
+    <div style={{ padding: '10px', border: '1px solid #ccc',  backgroundColor: bg, display: 'flex', gap: 5, borderRadius: '10px'}} onClick={handleClick} className='shapeTile'>
         <Stage width={30} height={30}>
             <Layer>
                 {ShapeIcon}

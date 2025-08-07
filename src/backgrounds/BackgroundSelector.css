@@ -1,0 +1,47 @@
+.background-selector {
+    position: fixed;
+    top: 60px;
+    right: 20px;
+    background: #d2d2d2;
+    padding: 15px;
+    border-radius: 8px;
+    z-index: 1000;
+    width: 250px;
+    overflow: auto;
+    height: 80%;
+}
+
+.background-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.background-item {
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    background: #ffffff;
+    transition: background 0.2s;
+}
+
+.background-item:hover {
+    background: #e7e7e7;
+}
+
+.background-preview {
+    aspect-ratio: 16/9;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    font-size: 12px;
+}
+
+.background-name {
+    font-size: 12px;
+    text-align: center;
+}

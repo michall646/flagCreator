@@ -22,7 +22,6 @@ interface SideBarProps{
 const SideBar = (props: SideBarProps) => {
     const [colorOpened, setColorOpened] = useState<boolean>(false);
 
-    console.log(props.sides)
     if(!props.showSideBar){
       return <></>
     }

@@ -9,9 +9,11 @@ export interface Shape {
     fill: string,
     rotation: number,
     sides? : number,
-    type: string,
+    type: string, 
     name: string,
     corners? : number;
     fillType: "solid"|"linear"|"radial";
-    gradient? : Gradient
+    gradient? : Gradient,
+    value?: string,
+    size?: number
 }

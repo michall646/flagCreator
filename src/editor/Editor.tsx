@@ -12,6 +12,7 @@ import type { Shape } from './ShapeType';
 import type { Gradient } from './GradientType';
 import { gradientProps } from '../scripts/getGradientProps';
 import { BackgroundSelector } from '../backgrounds/BackgroundSelector';
+import EditableText from './EditableText';
 
 const GUIDELINE_OFFSET = 5;
 
@@ -228,7 +229,7 @@ const Editor = () => {
     const [guides, setGuides] = useState<Guide[]>([]);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [color, setColor] = useState<string>("#ffffff");
-    const [tool, setTool] = useState<"none"| "rectangle" | "circle" | "polygon" | "background">("rectangle");
+    const [tool, setTool] = useState<"none"| "rectangle" | "circle" | "polygon" | "background"| "text">("rectangle");
     const history = useRef<canvasState[]>([]);
     const redoStack =  useRef<canvasState[]>([]);
     const [showBackgroundSelector, setShowBackgroundSelector] = useState(false);
@@ -264,14 +265,13 @@ const Editor = () => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Delete' && selectedIds.length > 0) {
                 saveState();
-                setShapes(prevShapes => prevShapes.filter(shape => !selectedIds.includes(shape.id)));
+                setShapes(prevShapes => prevShapes.filter(shape => !selectedIds.includes(shape.id) ));
 
                 setSelectedIds([]);
             }
 
             if((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z' && history.current.length > 0){
                 const popped = popFromHistory();
-                console.log(popped, history)
                 if (popped) {
                     setShapes(popped.shapes);
                 }
@@ -279,7 +279,6 @@ const Editor = () => {
             if((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Z'){
                 
                 const redo = redoStack.current.pop();
-                console.log(redo)
                 
                 if(redo){
                     setShapes(redo.shapes);
@@ -343,7 +342,7 @@ const Editor = () => {
     const validNodes = selectedIds
       .filter(id => id !== "")
       .map(id => rectRefs.current[id])
-      .filter((node): node is Konva.Rect => node !== null);
+    
     
     // Set the nodes or clear the transformer
     if (validNodes.length > 0) {
@@ -360,13 +359,15 @@ const Editor = () => {
 
   // Separate effect for color updates
     useEffect(() => {
-        if (selectedIds.length > 0) {  // Only update color if there's an actual selection
-            //const newColor = shapes.find(x => x.id === selectedIds[0])?.fill;
-            //if (newColor) setColor(newColor);
-            const newCorner = shapes.find(x => x.id === selectedIds[0])?.corners;
-            setCorners(newCorner || 0); 
-            const newSides = shapes.find(x => x.id === selectedIds[0])?.sides;
-            setSides(newSides || -1); 
+        if (selectedIds.length > 0) {  
+            const selected =  shapes.find(x => x.id === selectedIds[0]);
+            if(selected && 'corners' in selected && 'sides' in selected){
+                const newCorner = selected.corners;
+                setCorners(newCorner || 0); 
+                const newSides = selected.sides;
+                setSides(newSides || -1); 
+            } 
+            
         }
     }, [selectedIds, shapes]);
 
@@ -428,13 +429,12 @@ const Editor = () => {
                 )
         );
         
-        console.log(history.current)
     };
 
     const handleTransformEnd = (e: KonvaEventObject<Event>) => {
     // Find which rectangle(s) were transformed
     const node = e.target as Konva.Rect;
-    const id = node.id();
+        
     
     saveState();
     setShapes(prevRects => {
@@ -450,7 +450,6 @@ const Editor = () => {
         const newWidth = Math.max(5, newRects[index].width * scaleX);
         const newHeight = Math.max(5, newRects[index].height * scaleY);
 
-        console.log(newWidth, newHeight)
         
         // Reset scale to 1 since we're applying it to width/height
         node.scaleX(1);
@@ -521,6 +520,10 @@ const Editor = () => {
             spawnPolygon(selectionRectangle.x1, selectionRectangle.x2, selectionRectangle.y1, selectionRectangle.y2);
             return
         }
+        if(tool === "text"){
+            spawnText(selectionRectangle.x1, selectionRectangle.x2, selectionRectangle.y1, selectionRectangle.y2);
+            return
+        }
         
 
         const selBox = {
@@ -546,7 +549,6 @@ const Editor = () => {
         if (!pos) return;
         let x2 = pos.x;
         let y2 = pos.y;
-        console.log(e);
         if(e.evt.shiftKey){
             const width = x2 - selectionRectangle.x1;
             const height = y2 - selectionRectangle.y1;
@@ -580,17 +582,14 @@ const Editor = () => {
         const metaPressed = e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey;
         const isSelected = selectedIds.includes(clickedId);
 
-        console.log(clickedNode);
 
         // Check if the clicked shape is a background shape
         const clickedShape = shapes.find(shape => shape.id === clickedId);
-        console.log(clickedShape?.name);
         if (clickedShape?.name.startsWith('Background')) {
             // If it's a background shape, don't select it
             return;
         }
 
-        console.log(isSelected, metaPressed)
 
         if (!metaPressed && !isSelected) {
         // If no key pressed and the node is not selected
@@ -616,7 +615,6 @@ const Editor = () => {
             temp.colorStops = [...temp.colorStops];
             temp.colorStops[selectedStop + 1] = color.hex;  // +1 because colors are at odd indices
 
-            console.log(temp.colorStops)
             
             setGradient(temp);
             setShapes((prevRects) =>
@@ -663,6 +661,7 @@ const Editor = () => {
             rotation:shape.rotation,
             draggable : true,
             sides: shape.sides,
+            value: shape.value,
             cornerRadius: shape.corners,
             ...gradient,
             onClick:handleShapeClick,
@@ -676,7 +675,6 @@ const Editor = () => {
                 }
             }
         }
-        console.log(props)
         if(shape.type === "rectangle"){
             return <Rect key={shape.id} {...props}/>
         }
@@ -685,6 +683,9 @@ const Editor = () => {
         }
         if(shape.type === "circle"){
             return <Ellipse key={shape.id} {...props}/>
+        }
+        if(shape.type === "text"){
+            return <EditableText key={shape.id} {...props} handleTextChange={handleTextChange} handleTextDblClick={handleTextDblClick} handleTransform={() => {}}/>
         }
 
     }
@@ -745,6 +746,26 @@ const Editor = () => {
         setShapes(temp);
         
     }
+    const spawnText = (x1:number,x2:number,y1:number,y2:number) => {
+        const temp = shapes.slice();
+        temp.push({
+            id: `text-${temp.length}`, // Unique ID for each rectangle
+            x: x1 + (x2 - x1)/2,
+            y: y1 + (y2 - y1)/2,
+            width: x2 - x1,
+            height: y2 - y1,
+            fill: Konva.Util.getRandomColor(),
+            rotation: 0,
+            type: "text",
+            name: getNextItemName("circle"),
+            fillType: "solid",
+            value: "hello",
+
+        })
+        saveState();
+        setShapes(temp);
+        
+    }
 
     const getIndex = (item: string) => {
         return shapes.findIndex(x => x.id === item)
@@ -778,7 +799,6 @@ const Editor = () => {
         redoStack.current.push({shapes: shapes, background: null});
         const popped = history.current.pop();
         
-        console.log(redoStack.current);
         return popped
     }
 
@@ -868,12 +888,10 @@ const Editor = () => {
 
         const temp = shapes.map(x => {
             if(selectedIds.includes(x.id)){
-                console.log(x.id)
                 return {...x, corners: value}
             }
             else return x
         });
-        console.log(temp)
         saveState();
         setShapes(temp);
     }
@@ -883,7 +901,6 @@ const Editor = () => {
         setSides(value)
         const temp = shapes.map(x => {
             if(selectedIds.includes(x.id)){
-                console.log(x.id)
                 return {...x, sides: value}
             }
             else return x
@@ -901,7 +918,6 @@ const Editor = () => {
         const relativeX = (e.target.x() - selectedShape.x);
         const relativeY = (e.target.y() - selectedShape.y);
 
-        console.log(relativeX, relativeY);
 
         const temp = {
             ...gradient,
@@ -929,7 +945,6 @@ const Editor = () => {
         // Calculate relative position within the shape
         const relativeX = (e.target.x() - selectedShape.x);
         const relativeY = (e.target.y() - selectedShape.y);
-        console.log(relativeX, relativeY);
 
         const temp = {
             ...gradient,
@@ -1092,7 +1107,7 @@ const Editor = () => {
         setBackground(backgroundShapes);
         setShowBackgroundSelector(false);
     }
-    const renderBackground = (shape, index) => {
+    const renderBackground = (shape: Shape) => {
         const gradient = gradientProps(shape);
         
         const props = {
@@ -1119,6 +1134,14 @@ const Editor = () => {
             return <Ellipse key={shape.id} {...props}/>
         }
     };
+
+    const handleTextChange = (id: string, value:string) => {
+        setShapes(shapes.map(x => {
+            return x.id === id ? {...x, value}: x
+        }))
+    }
+    const handleTextDblClick = (e) => {
+    }
 
   return (
     <>
@@ -1254,6 +1277,7 @@ const Editor = () => {
         polygon={() => setTool("polygon")} 
         selection={() => setTool("none")} 
         circle={() => setTool("circle")} 
+        text={() => setTool("text")}
         rectangle={() => setTool("rectangle")}
         background={() => setShowBackgroundSelector(true)}
     />

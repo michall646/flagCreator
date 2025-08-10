@@ -1,25 +1,12 @@
-import { useState, type RefObject } from "react"
+
 import { Text} from "react-konva"
-import { useEffect, useRef, useCallback } from "react"
-import { Html } from 'react-konva-utils';
 interface TextProps{
-    handleTextDblClick: (e:any) => void,
-    handleTextChange:(id: string,value: string) => void,
-    handleTransform: (e:any) => void,
     [key: string]: any; // for other Konva properties
 }
 const EditableText = (props: TextProps) => {
+  
 
-    const [isEditing, setEditing] = useState<boolean>(false);
-    const textRef = useRef<any>(null);
 
-    const handleTextDblClick = useCallback(() => {
-    setEditing(true);
-  }, []);
-
-    const handleTextChange =(value:string) => {
-        props.handleTextChange(props.id, value)
-    }
   return (
     <>
     <Text
@@ -28,123 +15,18 @@ const EditableText = (props: TextProps) => {
     x={props.x}
     id={props.id}
     y={props.y}
-    fontSize={20}
+    fill={props.fill}
+    fontSize={props.fontSize}
     draggable
+    fontFamily={props.font}
     width={props.width}
     onClick={props.onClick}
-    onDblClick={handleTextDblClick}
-    onDblTap={handleTextDblClick}
-    visible={!isEditing}
+    onTransform={props.onTransformEnd}
     />
-    {isEditing && (
-        <TextEditor
-        textNode={textRef.current}
-        onChange={handleTextChange}
-        onClose={() => setEditing(false)}
-        />
-    )}
     </>
 )
 }
-const TextEditor = ({ textNode, onClose, onChange }) => {
-  const textareaRef = useRef(null);
 
-  useEffect(() => {
-    if (!textareaRef.current) return;
-
-    const textarea: any = textareaRef.current;
-    const stage = textNode.getStage();
-    const textPosition = textNode.position();
-    const areaPosition = {
-      x: textPosition.x,
-      y: textPosition.y,
-    };
-
-    // Match styles with the text node
-    textarea.value = textNode.text();
-    textarea.style.position = 'absolute';
-    textarea.style.top = `${areaPosition.y}px`;
-    textarea.style.left = `${areaPosition.x}px`;
-    textarea.style.width = `${textNode.width() - textNode.padding() * 2}px`;
-    textarea.style.height = `${textNode.height() - textNode.padding() * 2 + 5}px`;
-    textarea.style.fontSize = `${textNode.fontSize()}px`;
-    textarea.style.border = 'none';
-    textarea.style.padding = '0px';
-    textarea.style.margin = '0px';
-    textarea.style.overflow = 'hidden';
-    textarea.style.background = 'none';
-    textarea.style.outline = 'none';
-    textarea.style.resize = 'none';
-    textarea.style.lineHeight = textNode.lineHeight();
-    textarea.style.fontFamily = textNode.fontFamily();
-    textarea.style.transformOrigin = 'left top';
-    textarea.style.textAlign = textNode.align();
-    textarea.style.color = textNode.fill();
-
-    const rotation = textNode.rotation();
-    let transform = '';
-    if (rotation) {
-      transform += `rotateZ(${rotation}deg)`;
-    }
-    textarea.style.transform = transform;
-
-    textarea.style.height = 'auto';
-    textarea.style.height = `${textarea.scrollHeight + 3}px`;
-
-    textarea.focus();
-
-    const handleOutsideClick = (e) => {
-      if (e.target !== textarea) {
-        onChange(textarea.value);
-        onClose();
-      }
-    };
-
-    // Add event listeners
-    const handleKeyDown = (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        onChange(textarea.value);
-        onClose();
-      }
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    const handleInput = () => {
-      const scale = textNode.getAbsoluteScale().x;
-      textarea.style.width = `${textNode.width() * scale}px`;
-      textarea.style.height = 'auto';
-      textarea.style.height = `${textarea.scrollHeight + textNode.fontSize()}px`;
-    };
-
-    textarea.addEventListener('keydown', handleKeyDown);
-    textarea.addEventListener('input', handleInput);
-    setTimeout(() => {
-      window.addEventListener('click', handleOutsideClick);
-    });
-
-    return () => {
-      textarea.removeEventListener('keydown', handleKeyDown);
-      textarea.removeEventListener('input', handleInput);
-      window.removeEventListener('click', handleOutsideClick);
-    };
-  }, [textNode, onChange, onClose]);
-
-
-  return (
-    <Html>
-      <textarea
-        ref={textareaRef}
-        style={{
-          minHeight: '1em',
-          position: 'absolute',
-        }}
-      />
-    </Html>
-  );
-};
 
 
 

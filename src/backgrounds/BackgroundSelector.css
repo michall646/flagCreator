@@ -45,3 +45,11 @@
     font-size: 12px;
     text-align: center;
 }
+
+.colorSelector{
+    width: 50px;
+    height: 50px;
+    border-width: 2;
+    border-style: solid;
+    border-color: blue
+}

@@ -87,3 +87,20 @@ body {
   overflow: auto;
   max-height: 80%;
 }
+
+.input-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+#cords-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr; 
+  grid-template-rows: 1fr 1fr;    
+  gap: 10px;
+}
+
+input[type=number] {
+  width: 50px;
+}

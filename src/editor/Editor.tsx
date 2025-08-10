@@ -228,7 +228,6 @@ const Editor = () => {
     const [background, setBackground] = useState<Shape[]>([]);
     const [guides, setGuides] = useState<Guide[]>([]);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
-    const [color, setColor] = useState<string>("#ffffff");
     const [tool, setTool] = useState<"none"| "rectangle" | "circle" | "polygon" | "background"| "text">("rectangle");
     const history = useRef<canvasState[]>([]);
     const redoStack =  useRef<canvasState[]>([]);
@@ -240,7 +239,6 @@ const Editor = () => {
         x2: 0,
         y2: 0,
     });
-    const [corners,setCorners] = useState<number>(0);
     const [sides, setSides] = useState<number>(-1);
 
     const [selectedStop, setSelectedStop] = useState<number>(-1);
@@ -258,6 +256,13 @@ const Editor = () => {
     })
 
     const [showSideBar, setSideBar] = useState<boolean>(false);
+
+    const [bgColors, setBgColors] = useState([
+        "#f2ff00",
+        "#ff0000",
+        "#00ffc3",
+        "#55ff00ff"
+    ])
 
 
     // Handle keyboard events
@@ -341,7 +346,8 @@ const Editor = () => {
     // Filter out the empty string ID and get valid nodes
     const validNodes = selectedIds
       .filter(id => id !== "")
-      .map(id => rectRefs.current[id])
+      .map(id => rectRefs.current[id] as Node)
+      
     
     
     // Set the nodes or clear the transformer
@@ -358,18 +364,6 @@ const Editor = () => {
   }, [selectedIds]);
 
   // Separate effect for color updates
-    useEffect(() => {
-        if (selectedIds.length > 0) {  
-            const selected =  shapes.find(x => x.id === selectedIds[0]);
-            if(selected && 'corners' in selected && 'sides' in selected){
-                const newCorner = selected.corners;
-                setCorners(newCorner || 0); 
-                const newSides = selected.sides;
-                setSides(newSides || -1); 
-            } 
-            
-        }
-    }, [selectedIds, shapes]);
 
     const handleDragMove = (e: KonvaEventObject<DragEvent>) => {
         const draggedNode = e.target as Konva.Rect;
@@ -434,13 +428,13 @@ const Editor = () => {
     const handleTransformEnd = (e: KonvaEventObject<Event>) => {
     // Find which rectangle(s) were transformed
     const node = e.target as Konva.Rect;
-        
+    console.log("transform");
     
     saveState();
     setShapes(prevRects => {
       const newRects = [...prevRects];
-      const index = newRects.findIndex(r => r.id === id);
-      
+      const index = newRects.findIndex(r => r.id === e.target.id());
+        console.log(index);
       if (index !== -1) {
         // Get the current scale values
         const scaleX = node.scaleX();
@@ -642,13 +636,14 @@ const Editor = () => {
                 )
             );
         }
-        setColor(color.hex);
     }
 
 
     const renderShape = (shape: Shape) => {
 
         const gradient = gradientProps(shape);
+
+        console.log(shape)
         
         const props = {
             id: shape.id,
@@ -663,6 +658,8 @@ const Editor = () => {
             sides: shape.sides,
             value: shape.value,
             cornerRadius: shape.corners,
+            font: shape.font,
+            fontSize: shape.size,
             ...gradient,
             onClick:handleShapeClick,
             onDragMove:handleDragMove,
@@ -685,7 +682,7 @@ const Editor = () => {
             return <Ellipse key={shape.id} {...props}/>
         }
         if(shape.type === "text"){
-            return <EditableText key={shape.id} {...props} handleTextChange={handleTextChange} handleTextDblClick={handleTextDblClick} handleTransform={() => {}}/>
+            return <EditableText key={shape.id} {...props} reference={rectRefs.current[shape.id]}/>
         }
 
     }
@@ -706,6 +703,7 @@ const Editor = () => {
             fillType: "linear",
             gradient: { ...gradient }
         })
+        console.log(temp)
         setShapes(temp);
         
     }
@@ -757,12 +755,15 @@ const Editor = () => {
             fill: Konva.Util.getRandomColor(),
             rotation: 0,
             type: "text",
-            name: getNextItemName("circle"),
+            name: "Text",
             fillType: "solid",
-            value: "hello",
+            value: "Text",
+            font: "Arial",
+            size: 20,
 
         })
         saveState();
+        console.log(temp);
         setShapes(temp);
         
     }
@@ -884,7 +885,6 @@ const Editor = () => {
 
     const handleCornersChange = (value: number) =>{
         
-        setCorners(value);
 
         const temp = shapes.map(x => {
             if(selectedIds.includes(x.id)){
@@ -1135,12 +1135,44 @@ const Editor = () => {
         }
     };
 
-    const handleTextChange = (id: string, value:string) => {
-        setShapes(shapes.map(x => {
-            return x.id === id ? {...x, value}: x
+    const handleValueChange = (text: string)=>{
+        setShapes(shapes.map((x) => {
+            return selectedIds.includes(x.id) ? {...x, value:text, name: text}: x
+        }))
+        
+    } 
+
+    const handleFontChange = (font: string) => {
+        setShapes(shapes.map((x) => {
+            return selectedIds.includes(x.id) ? {...x, font}: x
         }))
     }
-    const handleTextDblClick = (e) => {
+    
+    const handleFontSizeChange = (size: number) => {
+        setShapes(shapes.map((x) => {
+            return selectedIds.includes(x.id) ? {...x, size}: x
+        }))
+    }
+
+    const handleXChange = (x: number) => {
+        setShapes(shapes.map((t) => {
+            return selectedIds.includes(t.id) ? {...t, x}: t
+        }))
+    }
+    const handleYChange = (y: number) => {
+        setShapes(shapes.map((t) => {
+            return selectedIds.includes(t.id) ? {...t, y}: t
+        }))
+    }
+    const handleWidthChange = (width: number) => {
+        setShapes(shapes.map((t) => {
+            return selectedIds.includes(t.id) ? {...t, width}: t
+        }))
+    }
+    const handleHeightChange = (height: number) => {
+        setShapes(shapes.map((t) => {
+            return selectedIds.includes(t.id) ? {...t, height}: t
+        }))
     }
 
   return (
@@ -1286,23 +1318,33 @@ const Editor = () => {
         showSideBar={showSideBar}
         selectedIds={selectedIds} 
         setSelectedIds={setSelectedIds} 
-        color={color} 
-        setColor={handleColorChange} 
+        shape={shapes.find(x => x.id === selectedIds[0])}
+
+        setColor={handleColorChange}
+        setSides={handleSidesChange}
+        setCorners={handleCornersChange}
+        handleFillTypeChange={handleFillTypeChange}
+        setValue={handleValueChange}
+        setFont={handleFontChange}
+        setSize={handleFontSizeChange}
+
+        setX={handleXChange}
+        setY={handleYChange}
+        setWidth={handleWidthChange}
+        setHeight={handleHeightChange}
+
         moveUp={moveUp} 
         moveDown={moveDown} 
         moveTop={moveTop} 
         moveBottom={moveBottom} 
-        corners={corners}
-        setCorners={handleCornersChange}
-        sides={sides}
-        setSides={handleSidesChange}
-        handleFillTypeChange={handleFillTypeChange}
     />
     {showBackgroundSelector && (
         <BackgroundSelector 
             onSelectBackground={handleBackgroundSelect}
             stageWidth={stageWidth}
             stageHeight={stageHeight}
+            bgColors={bgColors}
+            setBgColors={setBgColors}
         />
     )}
     

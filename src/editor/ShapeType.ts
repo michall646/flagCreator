@@ -15,5 +15,6 @@ export interface Shape {
     fillType: "solid"|"linear"|"radial";
     gradient? : Gradient,
     value?: string,
-    size?: number
+    size?: number,
+    font?: string,
 }

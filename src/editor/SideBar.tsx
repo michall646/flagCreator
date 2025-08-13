@@ -13,6 +13,9 @@ interface SideBarProps{
     setValue: (value: string) => void,
     setCorners : (value: number) => void,
     setSize: (size: number) => void,
+    setAlign: (mode: string) => void,
+    setStrokeColor: (color:ColorResult) => void,
+    setStrokeWidth: (width: number) => void,
 
     moveUp : () => void,
     moveDown : () => void,
@@ -24,7 +27,8 @@ interface SideBarProps{
     setX : (x:number) => void,
     setY : (y:number) => void,
     setWidth : (width: number) => void,
-    setHeight : (height: number) => void
+    setHeight : (height: number) => void,
+    
 }
 
 
@@ -34,7 +38,7 @@ const SideBar = (props: SideBarProps) => {
     }
     console.log(props)
   return (
-    <div id="sidebar">
+    <div className="sidebox" id="sidebar">
       <h3>Fill</h3>
       <select onChange={(e) => props.handleFillTypeChange(e.target.value)}>
         <option value={"solid"}>solid</option>
@@ -44,6 +48,20 @@ const SideBar = (props: SideBarProps) => {
       <Colorful
         color={props.shape.fill}
         onChange={props.setColor}
+      />
+      <h3>Stroke</h3>
+      width
+      <input
+        type="range"
+        min="0"
+        max="20"
+        value={props.shape.strokeWidth || 0}
+        onChange={(e) =>props.setStrokeWidth(Number(e.target.value))}
+      />
+      color
+      <Colorful
+        color={props.shape.strokeColor}
+        onChange={props.setStrokeColor}
       />
       <div id="cords-container">
         <div className="input-container">
@@ -62,7 +80,7 @@ const SideBar = (props: SideBarProps) => {
           <span>height</span>
           <input type="number" value={Math.round(props.shape.height * 10) /10  || 0} onChange={(e) =>props.setHeight(Number(e.target.value))}/>
         </div>
-      </div>
+        </div>
       <h3>Order</h3>
       <div style={{display: "flex", flexDirection: "row"}}>
         <button onClick={props.moveUp}>Up</button>
@@ -90,40 +108,46 @@ const SideBar = (props: SideBarProps) => {
           value={props.shape.sides}
           onChange={(e) =>props.setSides(Number(e.target.value))}
         />
+        
       </>
       }
       {typeof props.shape.value !== "undefined" &&
-      <>
-        <h3>Value</h3>
-        <input
-          value={props.shape.value}
-          onChange={(e) =>props.setValue(e.target.value)}
-        />
-      </>
+        <>
+          <h3>Value</h3>
+          <input
+            value={props.shape.value}
+            onChange={(e) =>props.setValue(e.target.value)}
+          />
+          <h3>Font</h3>
+          <select onChange={(e) => props.setFont(e.target.value)}>
+            <option value={"Arial"} style={{fontFamily: "Arial"}}>Arial</option>
+            <option value={"Bebas Neue"} style={{fontFamily: "Bebas Neue"}}>Bebas Neue</option>
+            <option value={"UnifrakturMaguntia"} style={{fontFamily: "UnifrakturMaguntia"}}>UnifrakturMaguntia</option>
+            <option value={"Alegreya Sans"} style={{fontFamily: "Alegreya Sans"}}>Alegreya Sans</option>
+            <option value={"Limelight"} style={{fontFamily: "Limelight"}}>Limelight</option>
+            <option value={"Monoton"} style={{fontFamily: "Monoton"}}>Monoton</option>
+            <option value={"Tiny5"} style={{fontFamily: "Tiny5"}}>Tiny5</option>
+            <option value={"Jacquard 12"} style={{fontFamily: "Jacquard 12"}}>Jacquard 12</option>
+            <option value={"Foldit"} style={{fontFamily: "Foldit"}}>Foldit</option>
+            <option value={"Protest Guerrilla"} style={{fontFamily: "Protest Guerrilla"}}>Protest Guerrilla</option>
+            <option value={"Caesar Dressing"} style={{fontFamily: "Caesar Dressing"}}>Caesar Dressing</option>
+          </select>
+          <h3>Font Size</h3>
+          <input
+            type="range"
+            min="5"
+            max="300"
+            value={props.shape.size}
+            onChange={(e) =>props.setSize(Number(e.target.value))}
+          />
+          <h3>Align</h3>
+          <select onChange={(e) => props.setAlign(e.target.value)}>
+            <option value={"left"}>Left</option>
+            <option value={"center"}>Center</option>
+            <option value={"right"}>Right</option>
+          </select>
+        </>
       }
-      {typeof props.shape.font !== "undefined" &&
-      <>
-        <h3>Font</h3>
-        <select onChange={(e) => props.setFont(e.target.value)}>
-          <option value={"Arial"}>Arial</option>
-          <option value={"Bebas Neue"}>Bebas Neue</option>
-          <option value={"UnifrakturMaguntia"}>UnifrakturMaguntia</option>
-        </select>
-      </>
-      }
-      {typeof props.shape.size !== "undefined" &&
-      <>
-        <h3>Font Size</h3>
-        <input
-          type="range"
-          min="5"
-          max="300"
-          value={props.shape.size}
-          onChange={(e) =>props.setSize(Number(e.target.value))}
-        />
-      </>
-      }
-      
     </div>
   )
 }

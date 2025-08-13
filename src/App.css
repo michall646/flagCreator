@@ -32,11 +32,15 @@ body {
 }
 
 #sidebar {
+  
+}
+
+.sidebox {
   background-color: rgb(222, 225, 227);
   border-radius: 10px;
   display: flex;
-  justify-content: center;
   flex-direction: column;
+  align-items: center;
   gap:5px;
   padding: 5px;
   margin: 10px;
@@ -44,8 +48,8 @@ body {
   right:0;
   top: 50%;
   transform: translate(0, -50%);
-  overflow: auto;
-  max-height: 80%;
+  overflow-y: auto;
+  max-height: 80vh;
 }
 
 @keyframes logo-spin {

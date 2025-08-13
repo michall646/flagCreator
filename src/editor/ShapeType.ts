@@ -17,4 +17,8 @@ export interface Shape {
     value?: string,
     size?: number,
     font?: string,
+    align?: "left" | "center" | "right"|string,
+    path?: string,
+    strokeColor?: string,
+    strokeWidth?: number,
 }

@@ -22,6 +22,9 @@ const EditableText = (props: TextProps) => {
     width={props.width}
     onClick={props.onClick}
     onTransform={props.onTransformEnd}
+    onDragMove={props.onDragMove}
+    onDragEnd={props.onDragEnd}
+    align={props.align}
     />
     </>
 )

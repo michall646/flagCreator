@@ -55,7 +55,7 @@ export const BackgroundSelector: FC<BackgroundSelectorProps> = ({ onSelectBackgr
     
     console.log(stageWidth, stageHeight)
     return (
-        <div className="background-selector">
+        <div className="sidebox">
             <h3>Backgrounds</h3>
             <hr></hr>
             <h4>Pattern</h4>

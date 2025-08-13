@@ -1,4 +1,4 @@
-import { Stage, Layer, Line, Rect, Transformer, Ellipse, Circle } from 'react-konva';
+import { Stage, Layer, Line, Rect, Transformer, Ellipse, Circle, Path } from 'react-konva';
 import { useState, useEffect, useRef } from 'react';
 import Konva from 'konva';
 import type { KonvaEventObject, Node, NodeConfig } from 'konva/lib/Node';
@@ -13,6 +13,7 @@ import type { Gradient } from './GradientType';
 import { gradientProps } from '../scripts/getGradientProps';
 import { BackgroundSelector } from '../backgrounds/BackgroundSelector';
 import EditableText from './EditableText';
+import SymbolSelector from '../symbols/SymbolSelector';
 
 const GUIDELINE_OFFSET = 5;
 
@@ -239,6 +240,7 @@ const Editor = () => {
         x2: 0,
         y2: 0,
     });
+    const [showSymbolSelector, setShowSymbolSelector] = useState(false);
     const [sides, setSides] = useState<number>(-1);
 
     const [selectedStop, setSelectedStop] = useState<number>(-1);
@@ -359,8 +361,15 @@ const Editor = () => {
       transformer.getLayer()?.batchDraw();
     }
 
-    if(selectedIds.length === 0) setSideBar(false);
-    else setSideBar(true);
+    if(selectedIds.length === 0) {
+        setSideBar(false);
+    }
+    else {
+        setSideBar(true);
+        setShowBackgroundSelector(false);
+        setShowSymbolSelector(false);
+    };
+
   }, [selectedIds]);
 
   // Separate effect for color updates
@@ -428,7 +437,6 @@ const Editor = () => {
     const handleTransformEnd = (e: KonvaEventObject<Event>) => {
     // Find which rectangle(s) were transformed
     const node = e.target as Konva.Rect;
-    console.log("transform");
     
     saveState();
     setShapes(prevRects => {
@@ -439,10 +447,15 @@ const Editor = () => {
         // Get the current scale values
         const scaleX = node.scaleX();
         const scaleY = node.scaleY();
+
+        const isPath = node instanceof Konva.Path;
+
+        console.log(isPath);
         
         // Calculate the new dimensions
-        const newWidth = Math.max(5, newRects[index].width * scaleX);
-        const newHeight = Math.max(5, newRects[index].height * scaleY);
+        const newWidth = isPath? 300 * scaleX: Math.max(5, node.width() * scaleX);
+        const newHeight = isPath? 300 * scaleY: Math.max(5, node.height() * scaleY);
+
 
         
         // Reset scale to 1 since we're applying it to width/height
@@ -490,8 +503,16 @@ const Editor = () => {
         return;
         }
         isSelecting.current = false;
-        if(selectionRectangle.x1 === selectionRectangle.x2||selectionRectangle.x1 === selectionRectangle.y1||selectionRectangle.x2 === selectionRectangle.y2||selectionRectangle.y1 === selectionRectangle.y2) {
+        console.log(Math.abs(selectionRectangle.x1 - selectionRectangle.x2), Math.abs(selectionRectangle.y1 - selectionRectangle.y2))
+        if(Math.abs(selectionRectangle.x1 - selectionRectangle.x2) * Math.abs(selectionRectangle.y1 - selectionRectangle.y2) < 200) {
             setSelectedIds([]);
+            setGuides([]);
+            setTimeout(() => {
+            setSelectionRectangle({
+                ...selectionRectangle,
+                visible: false,
+            });
+            });
             return
         }
         
@@ -643,7 +664,6 @@ const Editor = () => {
 
         const gradient = gradientProps(shape);
 
-        console.log(shape)
         
         const props = {
             id: shape.id,
@@ -660,6 +680,11 @@ const Editor = () => {
             cornerRadius: shape.corners,
             font: shape.font,
             fontSize: shape.size,
+            data: shape.path,
+            align: shape.align,
+            strokeEnabled: true,
+            strokeWidth: shape.strokeWidth,
+            stroke: shape.strokeColor,
             ...gradient,
             onClick:handleShapeClick,
             onDragMove:handleDragMove,
@@ -683,6 +708,10 @@ const Editor = () => {
         }
         if(shape.type === "text"){
             return <EditableText key={shape.id} {...props} reference={rectRefs.current[shape.id]}/>
+        }
+        console.log(shape.width)
+        if(shape.type === "svg"){
+            return <Path scaleX={shape.width/ 300} scaleY={shape.height/300} {...props}/>
         }
 
     }
@@ -767,6 +796,30 @@ const Editor = () => {
         setShapes(temp);
         
     }
+    const spawnSvg = (path: string) => {
+        setShowSymbolSelector(false);
+        const temp = shapes.slice();
+        const x1 = 100, x2 = 200, y1 = 100, y2 = 200
+        temp.push({
+            id: `symbol-${temp.length}`, // Unique ID for each rectangle
+            x: x1 + (x2 - x1)/2,
+            y: y1 + (y2 - y1)/2,
+            width: x2 - x1,
+            height: y2 - y1,
+            fill: 'black',
+            rotation: 0,
+            type: "svg",
+            name: "symbol",
+            fillType: "solid",
+            path: path
+
+        })
+        saveState();
+        console.log(temp);
+        setShapes(temp);
+        
+    }
+
 
     const getIndex = (item: string) => {
         return shapes.findIndex(x => x.id === item)
@@ -1175,6 +1228,22 @@ const Editor = () => {
         }))
     }
 
+    const setAlign = (align: string) => {
+        setShapes(shapes.map((t) => {
+            return selectedIds.includes(t.id) ? {...t, align}: t
+        }))
+    }
+    const setStrokeColor =(color: ColorResult) => {
+        setShapes(shapes.map(x => {
+            return selectedIds.includes(x.id) ? {...x, strokeColor: color.hex}: x
+        }))
+    }
+    const setStrokeWidth = (width: number) => {
+        setShapes(shapes.map(x => {
+            return selectedIds.includes(x.id) ? {...x, strokeWidth: width}: x;
+        }))
+    }
+
   return (
     <>
     <div style={{
@@ -1301,7 +1370,7 @@ const Editor = () => {
                 {gradient.colorStops.map(renderColorStop)}
             </>
         )}
-      </Layer>
+        </Layer>
     </Stage>
     </div>
     
@@ -1311,7 +1380,8 @@ const Editor = () => {
         circle={() => setTool("circle")} 
         text={() => setTool("text")}
         rectangle={() => setTool("rectangle")}
-        background={() => setShowBackgroundSelector(true)}
+        symbol={() => {setShowSymbolSelector(true); setShowBackgroundSelector(false); setSelectedIds([])}}
+        background={() => {setShowSymbolSelector(false); setShowBackgroundSelector(true); setSelectedIds([])}}
     />
     <ObjectList selected={selectedIds} setSelected={setSelectedIds} shapes={shapes} setShapes={setShapes}/>
     <SideBar 
@@ -1327,6 +1397,9 @@ const Editor = () => {
         setValue={handleValueChange}
         setFont={handleFontChange}
         setSize={handleFontSizeChange}
+        setAlign={setAlign}
+        setStrokeColor={setStrokeColor}
+        setStrokeWidth={setStrokeWidth}
 
         setX={handleXChange}
         setY={handleYChange}
@@ -1337,6 +1410,7 @@ const Editor = () => {
         moveDown={moveDown} 
         moveTop={moveTop} 
         moveBottom={moveBottom} 
+        
     />
     {showBackgroundSelector && (
         <BackgroundSelector 
@@ -1345,6 +1419,11 @@ const Editor = () => {
             stageHeight={stageHeight}
             bgColors={bgColors}
             setBgColors={setBgColors}
+        />
+    )}
+    {showSymbolSelector && (
+        <SymbolSelector
+            spawnSvg={spawnSvg}
         />
     )}
     

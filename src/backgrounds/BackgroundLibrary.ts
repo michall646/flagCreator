@@ -695,6 +695,112 @@ const createBackgrounds = (stageWidth: number, stageHeight: number, colors: stri
         
         
     ], stageWidth, stageHeight),
+    createBackground('6', [
+        {
+            type: 'rectangle',
+            x: 0,
+            y: 0,
+            width: 0.5,
+            height: 0.5, // One third of the height
+            fill: colors[0],
+            rotation: 0,
+            name: 'Background-Background',
+            fillType: 'solid',
+            corners: 0
+        },
+        {
+            type: 'rectangle',
+            x: 0.5,
+            y: 0,
+            width: 0.5,
+            height: 0.5, // One third of the height
+            fill: colors[1],
+            rotation: 0,
+            name: 'Background-Background',
+            fillType: 'solid',
+            corners: 0
+        },
+        {
+            type: 'rectangle',
+            x: 0,
+            y: 0.5,
+            width: 0.5,
+            height: 0.5, // One third of the height
+            fill: colors[2],
+            rotation: 0,
+            name: 'Background-Background',
+            fillType: 'solid',
+            corners: 0
+        },
+        {
+            type: 'rectangle',
+            x: 0.5,
+            y: 0.5,
+            width: 0.5,
+            height: 0.5, // One third of the height
+            fill: colors[3],
+            rotation: 0,
+            name: 'Background-Background',
+            fillType: 'solid',
+            corners: 0
+        },
+        
+        
+        
+    ], stageWidth, stageHeight),
+    createBackground('7', [
+        {
+            type: 'rectangle',
+            x: 0,
+            y: 0,
+            width: 1,
+            height: 0.5, // One third of the height
+            fill: colors[0],
+            rotation: 0,
+            name: 'Background-Background',
+            fillType: 'solid',
+            corners: 0
+        },
+        {
+            type: 'rectangle',
+            x: 0,
+            y: 0.5,
+            width: 0.333,
+            height: 0.5, // One third of the height
+            fill: colors[1],
+            rotation: 0,
+            name: 'Background-Background',
+            fillType: 'solid',
+            corners: 0
+        },
+        {
+            type: 'rectangle',
+            x: 0.333,
+            y: 0.5,
+            width: 0.333,
+            height: 0.5, // One third of the height
+            fill: colors[2],
+            rotation: 0,
+            name: 'Background-Background',
+            fillType: 'solid',
+            corners: 0
+        },
+        {
+            type: 'rectangle',
+            x: 0.666,
+            y: 0.5,
+            width: 0.333,
+            height: 0.5, // One third of the height
+            fill: colors[3],
+            rotation: 0,
+            name: 'Background-Background',
+            fillType: 'solid',
+            corners: 0
+        },
+        
+        
+        
+    ], stageWidth, stageHeight),
 
     // Add more background templates as needed
 ];

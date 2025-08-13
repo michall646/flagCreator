@@ -5,6 +5,7 @@ interface ToolBarProps{
     polygon: () => void,
     text: () => void
     selection: () => void,
+    symbol: () => void,
     background: () => void,
 }
 
@@ -28,6 +29,9 @@ const ToolBar = (props:ToolBarProps) => {
     <button
         onClick={props.text}
         >Text</button>
+    <button
+        onClick={props.symbol}
+        >Symbol</button>
     <button
         onClick={props.background}
         >Background</button>

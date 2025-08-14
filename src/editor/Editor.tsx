@@ -6,7 +6,7 @@ import { type ColorResult } from '@uiw/react-color';
 import RegPolygon from './RegPolygon';
 import { bringDownByOne, bringToTheBottom, bringToTheTop, bringUpByOne } from '../scripts/layers';
 import ObjectList from './ObjectList';
-import ToolBar from './ToolBar';
+import ToolBar from '../toolbar/ToolBar';
 import SideBar from './SideBar';
 import type { Shape } from './ShapeType';
 import type { Gradient } from './GradientType';
@@ -781,7 +781,7 @@ const Editor = () => {
             y: y1 + (y2 - y1)/2,
             width: x2 - x1,
             height: y2 - y1,
-            fill: Konva.Util.getRandomColor(),
+            fill: "black",
             rotation: 0,
             type: "text",
             name: "Text",
@@ -1382,6 +1382,7 @@ const Editor = () => {
         rectangle={() => setTool("rectangle")}
         symbol={() => {setShowSymbolSelector(true); setShowBackgroundSelector(false); setSelectedIds([])}}
         background={() => {setShowSymbolSelector(false); setShowBackgroundSelector(true); setSelectedIds([])}}
+        tool={tool}
     />
     <ObjectList selected={selectedIds} setSelected={setSelectedIds} shapes={shapes} setShapes={setShapes}/>
     <SideBar 

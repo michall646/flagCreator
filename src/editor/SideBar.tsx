@@ -1,6 +1,7 @@
 
 import { Colorful, type ColorResult } from "@uiw/react-color"
 import type { Shape } from "./ShapeType";
+import Select from 'react-select'
 
 interface SideBarProps{
     selectedIds: string[],
@@ -36,15 +37,33 @@ const SideBar = (props: SideBarProps) => {
     if(!props.showSideBar || !props.shape){
       return <></>
     }
-    console.log(props)
+    const fillOptions = [
+      { value: 'solid', label: 'solid' },
+      { value: 'linear', label: 'linear gradient' },
+    ]
+    const fontOptions = [
+      { value: 'Arial', label: 'Arial' },
+      { value: 'Bebas Neue', label: 'Bebas Neue' },
+      { value: 'UnifrakturMaguntia', label: 'UnifrakturMaguntia' },
+      { value: 'Alegreya Sans', label: 'Alegreya Sans' },
+      { value: 'Limelight', label: 'Limelight' },
+      { value: 'Monoton', label: 'Monoton' },
+      { value: 'Tiny5', label: 'Tiny5' },
+      { value: 'Jacquard 12', label: 'Jacquard 12' },
+      { value: 'Foldit', label: 'Foldit' },
+      { value: 'Protest Guerrilla', label: 'Protest Guerrilla' },
+      { value: 'Caesar Dressing', label: 'Caesar Dressing' },
+
+    ]
+    const alignOptions = [
+      {value: 'center', label: 'center'},
+      {value: 'left', label: 'left'},
+      {value: 'right', label: 'right'},
+    ]
   return (
     <div className="sidebox" id="sidebar">
       <h3>Fill</h3>
-      <select onChange={(e) => props.handleFillTypeChange(e.target.value)}>
-        <option value={"solid"}>solid</option>
-        <option value={"linear"}>linear gradient</option>
-        <option value={"radial"}>radial gradient</option>
-      </select>
+      <Select options={fillOptions} onChange={(x) => props.handleFillTypeChange(x.value)} unstyled classNamePrefix="sel" className="react-select-container"/>
       <Colorful
         color={props.shape.fill}
         onChange={props.setColor}
@@ -83,10 +102,10 @@ const SideBar = (props: SideBarProps) => {
         </div>
       <h3>Order</h3>
       <div style={{display: "flex", flexDirection: "row"}}>
-        <button onClick={props.moveUp}>Up</button>
-        <button onClick={props.moveDown}>Down</button>
-        <button onClick={props.moveTop}>Top</button>
-        <button onClick={props.moveBottom}>Bottom</button>
+        <button onClick={props.moveUp}><span style={{color: 'black'}} className="material-symbols-outlined">move_up</span></button>
+        <button onClick={props.moveDown}><span style={{color: 'black'}} className="material-symbols-outlined">move_down</span></button>
+        <button onClick={props.moveTop}><span style={{color: 'black'}} className="material-symbols-outlined">vertical_align_top</span></button>
+        <button onClick={props.moveBottom}><span style={{color: 'black'}} className="material-symbols-outlined">vertical_align_bottom</span></button>
       </div>
       <hr></hr>
       <h3>Corner Radius</h3>
@@ -119,19 +138,12 @@ const SideBar = (props: SideBarProps) => {
             onChange={(e) =>props.setValue(e.target.value)}
           />
           <h3>Font</h3>
-          <select onChange={(e) => props.setFont(e.target.value)}>
-            <option value={"Arial"} style={{fontFamily: "Arial"}}>Arial</option>
-            <option value={"Bebas Neue"} style={{fontFamily: "Bebas Neue"}}>Bebas Neue</option>
-            <option value={"UnifrakturMaguntia"} style={{fontFamily: "UnifrakturMaguntia"}}>UnifrakturMaguntia</option>
-            <option value={"Alegreya Sans"} style={{fontFamily: "Alegreya Sans"}}>Alegreya Sans</option>
-            <option value={"Limelight"} style={{fontFamily: "Limelight"}}>Limelight</option>
-            <option value={"Monoton"} style={{fontFamily: "Monoton"}}>Monoton</option>
-            <option value={"Tiny5"} style={{fontFamily: "Tiny5"}}>Tiny5</option>
-            <option value={"Jacquard 12"} style={{fontFamily: "Jacquard 12"}}>Jacquard 12</option>
-            <option value={"Foldit"} style={{fontFamily: "Foldit"}}>Foldit</option>
-            <option value={"Protest Guerrilla"} style={{fontFamily: "Protest Guerrilla"}}>Protest Guerrilla</option>
-            <option value={"Caesar Dressing"} style={{fontFamily: "Caesar Dressing"}}>Caesar Dressing</option>
-          </select>
+          <Select options={fontOptions}  onChange={(e) => props.setFont(e.value)} unstyled classNamePrefix="sel" className="react-select-container" styles={{
+            option: (base, state) => ({
+              ...base,
+              fontFamily:state.label
+            })
+          }}/>
           <h3>Font Size</h3>
           <input
             type="range"
@@ -141,11 +153,7 @@ const SideBar = (props: SideBarProps) => {
             onChange={(e) =>props.setSize(Number(e.target.value))}
           />
           <h3>Align</h3>
-          <select onChange={(e) => props.setAlign(e.target.value)}>
-            <option value={"left"}>Left</option>
-            <option value={"center"}>Center</option>
-            <option value={"right"}>Right</option>
-          </select>
+          <Select options={alignOptions} onChange={(e) => props.setAlign(e.value)} unstyled classNamePrefix="sel" className="react-select-container"/>
         </>
       }
     </div>

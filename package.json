@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mdi/font": "^7.4.47",
+    "@mdi/js": "^7.4.47",
+    "@mdi/react": "^1.6.1",
     "@uiw/react-color": "^2.7.2",
     "canvg": "^4.0.3",
     "konva": "^9.3.22",
@@ -17,8 +20,10 @@
     "react-dom": "^19.1.0",
     "react-edit-text": "^5.1.1",
     "react-editext": "^7.1.0",
+    "react-icons": "^5.5.0",
     "react-konva": "^19.0.7",
     "react-konva-utils": "^1.1.1",
+    "react-select": "^5.10.2",
     "react-slider": "^2.0.6",
     "use-image": "^1.1.4"
   },

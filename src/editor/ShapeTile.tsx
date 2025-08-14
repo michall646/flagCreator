@@ -87,9 +87,9 @@ const ShapeTile = ({shape, change, editingId, setEditingId, selected, handleSele
     const ShapeIcon = renderShape(shape);
 
     const isSelected = selected.includes(shape.id);
-    const bg = isSelected? '#73bbffff':'transparent';
+    const bgClass = isSelected? 'toolSelected':'';
   return (
-    <div style={{ padding: '10px', border: '1px solid #ccc',  backgroundColor: bg, display: 'flex', gap: 5, borderRadius: '10px'}} onClick={handleClick} className='shapeTile'>
+    <div onClick={handleClick} className={'shapeTile ' + bgClass}>
         <Stage width={30} height={30}>
             <Layer>
                 {ShapeIcon}

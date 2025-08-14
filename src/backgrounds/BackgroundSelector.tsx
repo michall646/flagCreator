@@ -57,8 +57,6 @@ export const BackgroundSelector: FC<BackgroundSelectorProps> = ({ onSelectBackgr
     return (
         <div className="sidebox">
             <h3>Backgrounds</h3>
-            <hr></hr>
-            <h4>Pattern</h4>
             <div className="background-grid">
                 {createBackgrounds(stageWidth, stageHeight, bgColors).map((bg) => (
                     <div

@@ -442,8 +442,9 @@ const Editor = () => {
     setShapes(prevRects => {
       const newRects = [...prevRects];
       const index = newRects.findIndex(r => r.id === e.target.id());
-        console.log(index);
       if (index !== -1) {
+        const oldWidth = newRects[index].width;
+        const oldHeight = newRects[index].height;
         // Get the current scale values
         const scaleX = node.scaleX();
         const scaleY = node.scaleY();
@@ -453,8 +454,19 @@ const Editor = () => {
         console.log(isPath);
         
         // Calculate the new dimensions
-        const newWidth = isPath? 300 * scaleX: Math.max(5, node.width() * scaleX);
-        const newHeight = isPath? 300 * scaleY: Math.max(5, node.height() * scaleY);
+
+        let newWidth = 0;
+        let newHeight = 0;
+
+        if(isPath) {
+            newWidth = 300 * scaleX;
+            newHeight = 300 * scaleY;
+        }
+        else{
+            console.log(scaleY , (oldHeight/ oldWidth))
+            newWidth = Math.max(5, node.width() * scaleX)
+            newHeight = Math.max(5, node.height() * ( scaleY / (oldHeight/ oldWidth)))
+        }
 
 
         

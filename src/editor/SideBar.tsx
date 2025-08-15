@@ -61,6 +61,7 @@ const SideBar = (props: SideBarProps) => {
       {value: 'right', label: 'right'},
     ]
   return (
+    <div>
     <div className="sidebox" id="sidebar">
       <h3>Fill</h3>
       <Select options={fillOptions} onChange={(x) => props.handleFillTypeChange(x.value)} unstyled classNamePrefix="sel" className="react-select-container"/>
@@ -156,6 +157,7 @@ const SideBar = (props: SideBarProps) => {
           <Select options={alignOptions} onChange={(e) => props.setAlign(e.value)} unstyled classNamePrefix="sel" className="react-select-container"/>
         </>
       }
+    </div>
     </div>
   )
 }

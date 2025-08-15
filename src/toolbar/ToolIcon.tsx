@@ -11,7 +11,6 @@ const ToolIcon = (props: toolIconProps) => {
 
     const isSelected = props.tool === props.selected;
     const selectedClass = isSelected? "toolSelected" : "";
-    console.log(selectedClass);
   return (
       <button
         className={"toolIcon " + selectedClass}

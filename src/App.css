@@ -10,7 +10,7 @@
   --background: rgb(11, 16, 27);
   --primary: rgb(48, 112, 255);
   --secondary: rgb(33, 65, 135);
-  --side: rgba(32, 45, 74, 0.3);
+  --side: rgba(0, 0, 0, 0.3);
   --accent: rgb(78, 124, 225);
   --gray: #1e1e22;
 }
@@ -40,16 +40,21 @@ body {
   border-radius: 10px;
   display: flex;
   flex-direction: row;
+  padding: 10px;
   gap: 5px;
   left: 50%;
   transform: translate(-50%, 0);
-  
+  background: linear-gradient(100deg,rgba(255, 255, 255, 0.288) -20%, rgba(0, 0, 0, 0.375) 50%, rgba(78, 145, 172, 0.273) 130%);
+  box-shadow: 0px 0px 50px #0000008a;
+  box-shadow: inset 0px 0px 10px #ffffff33;
 }
 
 .toolIcon {
   transition-property: background-color;
   transition-duration: 0.5s;
-  background-color: var(--gray);
+  background-color: transparent;
+  box-shadow: inset 1px 0px 10px rgba(255, 255, 255, 0.079);
+  backdrop-filter: blur(30px);
 }
 .toolIcon:hover {
   border-color: var(--text);
@@ -57,12 +62,15 @@ body {
 
 .toolSelected {
   background-color: var(--accent);
+  box-shadow: 0px 0px 20px #0051ff6f;
 }
 
 
 .sidebox {
-  backdrop-filter: blur(20px);
-  background-color: var(--side);
+  backdrop-filter: blur(30px);
+  box-shadow: 0px 0px 50px #0000008a;
+  box-shadow: inset 0px 0px 10px #ffffff33;
+  background: linear-gradient(135deg,rgba(255, 255, 255, 0.288) -20%, rgba(0, 0, 0, 0.375) 50%, rgba(78, 145, 172, 0.273) 130%);
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -76,6 +84,7 @@ body {
   transform: translate(0, -50%);
   overflow-y: auto;
   max-height: 80vh;
+
 }
 
 @keyframes logo-spin {
@@ -101,14 +110,41 @@ body {
   color: #888;
 }
 
+#symbolSelector {
+  padding: 10px;
+  width: 240px;
+  gap: 30px;
+  justify-content: center;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.symbol-preview {
+  box-shadow: inset 1px 0px 10px rgba(255, 255, 255, 0.079);
+  backdrop-filter: blur(30px);
+  border-radius: 10px;
+  padding: 5px;
+  width: 90px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 #objectList {
+  backdrop-filter: blur(30px);
+  box-shadow: 0px 0px 50px #0000008a;
+  box-shadow: inset 0px 0px 10px #ffffff33;
+  background: linear-gradient(135deg,rgba(255, 255, 255, 0.164) -20%, rgba(0, 0, 0, 0.375) 50%, rgba(78, 145, 172, 0.273) 130%);
   border-radius: 10px;
   background-color: var(--side);
-   backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   display: flex;
   justify-content: center;
   flex-direction: column;
   gap:5px;
+  width: 200px;
+  min-height: 200px;
   padding: 5px;
   margin: 10px;
   position:fixed;
@@ -127,6 +163,7 @@ body {
   flex-direction: row;
   gap: 5;
   border-radius: 10px;
+  transition: background 0.7s;
 }
 
 .input-container {
@@ -209,12 +246,13 @@ option {
     cursor: pointer;
     padding: 8px;
     border-radius: 4px;
-    background-color: var(--secondary);
+    box-shadow: inset 1px 0px 10px rgba(255, 255, 255, 0.123);
     transition: background 0.2s;
+    backdrop-filter: blur(30px);
 }
 
 .background-item:hover {
-    background: #e7e7e7;
+    background: #e7e7e79d;
 }
 
 .background-preview {

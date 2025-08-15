@@ -57,6 +57,8 @@ const ObjectList = (props: listProps) => {
 
   return (
     <div id="objectList">
+      <button id="exportButton">Export</button>
+      <h3>Objects</h3>
       {props.shapes.map(renderItem)}
     </div>
   )

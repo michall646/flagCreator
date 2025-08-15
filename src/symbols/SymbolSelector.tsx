@@ -9,14 +9,14 @@ const SymbolSelector = (props: SelectorProps) => {
     console.log
     return (
         <>
-            <div className="sidebox" style={{flexDirection: 'row', width: '190px', flexWrap: 'wrap'}}>
+            <div id="symbolSelector" className="sidebox" >
                 {createSymbols().map((s, i) => (
                      <div
                         key={i}
                         style={{width: 80, height: 80,}}
                         onClick={() =>{console.log(i, s.slice(0, 4)); props.spawnSvg(s)}}
                     >
-                        <div className="background-preview">
+                        <div className="symbol-preview">
                         <Stage width={80} height={80}>
                             <Layer> 
                                 <Path
@@ -25,7 +25,7 @@ const SymbolSelector = (props: SelectorProps) => {
                                 height={80}
                                 scaleX={0.2667}
                                 scaleY={0.2667}
-                                fill='black'
+                                fill='rgb(78, 124, 225)'
                                 />
                             </Layer>
                         </Stage>

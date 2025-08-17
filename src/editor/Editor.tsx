@@ -14,6 +14,8 @@ import { gradientProps } from '../scripts/getGradientProps';
 import { BackgroundSelector } from '../backgrounds/BackgroundSelector';
 import EditableText from './EditableText';
 import SymbolSelector from '../symbols/SymbolSelector';
+import Modal from 'react-modal';
+import { useFilePicker } from 'use-file-picker';
 
 const GUIDELINE_OFFSET = 5;
 
@@ -222,7 +224,7 @@ const Editor = () => {
         
         return { width, height };
     };
-
+    const stageRef = useRef(null);
     const [stageWidth, setStageWidth] = useState(calculateStageDimensions().width);
     const [stageHeight, setStageHeight] = useState(calculateStageDimensions().height);
     const [shapes, setShapes] = useState<Shape[]>([]);
@@ -265,6 +267,17 @@ const Editor = () => {
         "#00ffc3",
         "#55ff00ff"
     ])
+    const [fileName, setFileName] = useState<string>("Flag");
+    const [exportModal, setExportModal] = useState<boolean>();
+    const { openFilePicker} = useFilePicker({
+         accept: '.json',
+         onFilesSuccessfullySelected: ({filesContent }) => {
+            const data = JSON.parse(filesContent[0].content);
+            console.log(data);
+            setShapes(data.shapes);
+            setBackground(data.background);
+         }
+    });
 
 
     // Handle keyboard events
@@ -423,7 +436,7 @@ const Editor = () => {
         const draggedNode = e.target;
         if(!draggedNode) return
         const draggedRectId = draggedNode.id();
-        
+        saveState();
         setShapes((prevRects) =>
             prevRects.map((rect) =>
                 rect.id === draggedRectId
@@ -451,7 +464,7 @@ const Editor = () => {
 
         const isPath = node instanceof Konva.Path;
 
-        console.log(isPath);
+        
         
         // Calculate the new dimensions
 
@@ -463,9 +476,8 @@ const Editor = () => {
             newHeight = 300 * scaleY;
         }
         else{
-            console.log(scaleY , (oldHeight/ oldWidth))
-            newWidth = Math.max(5, node.width() * scaleX)
-            newHeight = Math.max(5, node.height() * ( scaleY / (oldHeight/ oldWidth)))
+            newWidth = node.width() * scaleX
+            newHeight = node.height() * (scaleY / (oldHeight/ oldWidth));
         }
 
 
@@ -644,6 +656,7 @@ const Editor = () => {
 
             
             setGradient(temp);
+            saveState();
             setShapes((prevRects) =>
                 prevRects.map((rect) =>
                     selectedIds.includes(rect.id)
@@ -657,6 +670,7 @@ const Editor = () => {
             );
         } else {
             // Update fill color as before
+            saveState();
             setShapes((prevRects) =>
                 prevRects.map((rect) =>
                     selectedIds.includes(rect.id)
@@ -737,14 +751,14 @@ const Editor = () => {
             y: y1,
             width: x2 - x1,
             height: y2 - y1,
-            fill: Konva.Util.getRandomColor(),
+            fill: bgColors[0],
             rotation: 0,
             type: "rectangle",
             name: getNextItemName("rectangle"),
-            fillType: "linear",
+            fillType: "solid",
             gradient: { ...gradient }
         })
-        console.log(temp)
+        saveState();
         setShapes(temp);
         
     }
@@ -756,7 +770,7 @@ const Editor = () => {
             y: y1,
             width: x2 - x1,
             height: y2 - y1,
-            fill: Konva.Util.getRandomColor(),
+            fill: bgColors[0],
             rotation: 0,
             sides: sides > 3? sides: 3,
             type: "regular",
@@ -775,7 +789,7 @@ const Editor = () => {
             y: y1 + (y2 - y1)/2,
             width: x2 - x1,
             height: y2 - y1,
-            fill: Konva.Util.getRandomColor(),
+            fill: bgColors[0],
             rotation: 0,
             type: "circle",
             name: getNextItemName("circle"),
@@ -818,7 +832,7 @@ const Editor = () => {
             y: y1 + (y2 - y1)/2,
             width: x2 - x1,
             height: y2 - y1,
-            fill: 'black',
+            fill: bgColors[0],
             rotation: 0,
             type: "svg",
             name: "symbol",
@@ -991,6 +1005,7 @@ const Editor = () => {
                 y: relativeY
             }
         };
+        saveState();
         
         setShapes(shapes.map(x => {
             if(selectedIds.includes(x.id)) {
@@ -999,7 +1014,7 @@ const Editor = () => {
             return x
         }));
         setGradient(temp);
-        saveState();
+        
     }
 
     const endPointMove = (e: KonvaEventObject<DragEvent>) => {
@@ -1018,7 +1033,7 @@ const Editor = () => {
                 y: relativeY
             }
         };
-        
+        saveState();
         setShapes(shapes.map(x => {
             if(selectedIds.includes(x.id)) {
                 return {...x, gradient: {...temp}, fillType: "linear"}
@@ -1071,6 +1086,7 @@ const Editor = () => {
         temp.colorStops = [...temp.colorStops];
         // Insert new stop at the calculated position
         temp.colorStops.splice(temp.colorStops.length - 2, 0, position, '#ffffff');
+        saveState();
         
         setShapes(shapes.map(x => {
             if(selectedIds.includes(x.id)) {
@@ -1080,7 +1096,7 @@ const Editor = () => {
         }));
         setSelectedStop(temp.colorStops.length - 4);
         setGradient(temp);
-        saveState();
+        
     }
 
     const renderColorStop = (stop: number | string, i: number) => {
@@ -1140,7 +1156,7 @@ const Editor = () => {
                         const temp = {...gradient};
                         temp.colorStops = [...temp.colorStops];
                         temp.colorStops[i] = position;
-
+                        saveState();
                         setShapes(shapes.map(x => {
                             if(selectedIds.includes(x.id)) {
                                 return {...x, gradient: temp, fillType: "linear"}
@@ -1159,6 +1175,7 @@ const Editor = () => {
     }
 
     const handleFillTypeChange = (type: "linear"|"solid"|"radial")=>{
+        saveState();
         setShapes(shapes.map(x => {
             if(selectedIds.includes(x.id)) {
                 return {...x, gradient: x.gradient || gradient, fillType: type}
@@ -1201,6 +1218,7 @@ const Editor = () => {
     };
 
     const handleValueChange = (text: string)=>{
+        saveState();
         setShapes(shapes.map((x) => {
             return selectedIds.includes(x.id) ? {...x, value:text, name: text}: x
         }))
@@ -1208,53 +1226,93 @@ const Editor = () => {
     } 
 
     const handleFontChange = (font: string) => {
+        saveState();
         setShapes(shapes.map((x) => {
             return selectedIds.includes(x.id) ? {...x, font}: x
         }))
     }
     
     const handleFontSizeChange = (size: number) => {
+        saveState();
         setShapes(shapes.map((x) => {
             return selectedIds.includes(x.id) ? {...x, size}: x
         }))
     }
 
     const handleXChange = (x: number) => {
+        saveState();
         setShapes(shapes.map((t) => {
             return selectedIds.includes(t.id) ? {...t, x}: t
         }))
     }
     const handleYChange = (y: number) => {
+        saveState();
         setShapes(shapes.map((t) => {
             return selectedIds.includes(t.id) ? {...t, y}: t
         }))
     }
     const handleWidthChange = (width: number) => {
+        saveState();
         setShapes(shapes.map((t) => {
             return selectedIds.includes(t.id) ? {...t, width}: t
         }))
     }
     const handleHeightChange = (height: number) => {
+        saveState();
         setShapes(shapes.map((t) => {
             return selectedIds.includes(t.id) ? {...t, height}: t
         }))
     }
 
     const setAlign = (align: string) => {
+        saveState();
         setShapes(shapes.map((t) => {
             return selectedIds.includes(t.id) ? {...t, align}: t
         }))
     }
     const setStrokeColor =(color: ColorResult) => {
+        saveState();
         setShapes(shapes.map(x => {
             return selectedIds.includes(x.id) ? {...x, strokeColor: color.hex}: x
         }))
     }
     const setStrokeWidth = (width: number) => {
+        saveState();
         setShapes(shapes.map(x => {
             return selectedIds.includes(x.id) ? {...x, strokeWidth: width}: x;
         }))
     }
+
+    const handlePNGExport = () => {
+        if(!stageRef.current) return
+        const dataURL = stageRef.current.toDataURL({
+        pixelRatio: 2 // double resolution
+        });
+        
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = dataURL;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+  };
+  const handleJSONExport = () => {
+    const data = {
+        shapes: shapes,
+        background: background
+    }
+    const dataURL = URL.createObjectURL(
+    new Blob([JSON.stringify(data)], {type:"application/json"}))
+    const link = document.createElement('a');
+    link.download = fileName;
+    link.href = dataURL;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+  }
+
+
 
   return (
     <>
@@ -1274,6 +1332,7 @@ const Editor = () => {
             onMouseUp={handleMouseUp}
             onMouseMove={handleMouseMove}
             onTouchStart={checkDeselect}
+            ref={stageRef}
             style={{
                 backgroundColor: 'white',
             }}>
@@ -1396,12 +1455,13 @@ const Editor = () => {
         background={() => {setShowSymbolSelector(false); setShowBackgroundSelector(true); setSelectedIds([])}}
         tool={tool}
     />
-    <ObjectList selected={selectedIds} setSelected={setSelectedIds} shapes={shapes} setShapes={setShapes}/>
+    <ObjectList selected={selectedIds} setSelected={setSelectedIds} shapes={shapes} setShapes={setShapes} import={openFilePicker} export={() => setExportModal(true)}/>
     <SideBar 
         showSideBar={showSideBar}
         selectedIds={selectedIds} 
         setSelectedIds={setSelectedIds} 
         shape={shapes.find(x => x.id === selectedIds[0])}
+        setSideBar={setSideBar}
 
         setColor={handleColorChange}
         setSides={handleSidesChange}
@@ -1439,7 +1499,22 @@ const Editor = () => {
             spawnSvg={spawnSvg}
         />
     )}
-    
+    <Modal
+        isOpen={exportModal}
+        contentLabel="Example Modal"
+        className="Modal"
+        overlayClassName="Overlay"
+        onRequestClose={() => setExportModal(false)}
+      >
+        <h2>Export</h2>
+        <h3>File Format</h3>
+        <div style={{display: "flex", flexDirection: "row", gap: "10px"}}>
+            <button onClick={handlePNGExport} >PNG</button>
+            <button onClick={handleJSONExport}>JSON</button>
+        </div>
+        <h3>File Name</h3>
+        <input value={fileName} onChange={(e) =>setFileName(e.target.value)}></input>
+      </Modal>
     </>
   )
 }

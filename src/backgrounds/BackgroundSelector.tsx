@@ -30,6 +30,7 @@ export const BackgroundSelector: FC<BackgroundSelectorProps> = ({ onSelectBackgr
           height: shape.height / stageHeight,
           ...gradient,
           rotation:shape.rotation,
+          key: shape.id
         }
         const shapeOffset = {x: shape.width / 2, y: shape.height / 2}
         if(shape.type === "rectangle"){

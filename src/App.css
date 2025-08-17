@@ -170,18 +170,28 @@ body {
   display: flex;
   flex-direction: row;
   justify-content: center;
+  gap: 10px
 }
 
 #cords-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr; 
-  grid-template-rows: 1fr 1fr;    
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px
 }
 
-input[type=number] {
+input {
   width: 50px;
+  border-radius: 7px;
+  border-color: transparent;
+  background-color: transparent;
+  box-shadow: inset 1px 0px 10px rgba(255, 255, 255, 0.079);
+  backdrop-filter: blur(30px);
 }
+
+.textValueField {
+  width: 200px;
+}
+
 
 button span {
   color: var(--text)
@@ -207,13 +217,13 @@ option {
 
 .sel__control{
   width: 200px;
-  background-color: var(--secondary);
+  background-color: var(--accent);
   border-radius: 10px;
 }
 .sel__menu{
   margin-top: 2px;
   width: 200px;
-  background-color: var(--secondary);
+  background-color: var(--accent);
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -278,3 +288,61 @@ option {
     border-style: solid;
     border-color: blue
 }
+
+.slider {
+  box-shadow: inset 1px 0px 10px rgba(255, 255, 255, 0.079);
+  backdrop-filter: blur(30px);
+  border-radius: 10px;
+  -webkit-appearance: none;  /* Override default CSS styles */
+  appearance: none;
+  width: 200px; /* Full-width */
+  height: 25px; /* Specified height */
+  background: transparent; /* Grey background */
+  outline: none; /* Remove outline */
+  opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+  transition: opacity .2s;
+  border-radius: 20px;
+}
+
+.slider::-webkit-slider-thumb {
+  background-color: var(--accent);
+  box-shadow: 0px 0px 20px #0051ff7e;
+  -webkit-appearance: none; /* Override default look */
+  appearance: none;
+  width: 25px; /* Set a specific slider handle width */
+  height: 25px; /* Slider handle height */
+  cursor: pointer; /* Cursor on hover */
+  border-radius: 20px;
+}
+
+.slider::-moz-range-thumb {
+  width: 25px; /* Set a specific slider handle width */
+  height: 25px; /* Slider handle height */
+  background: #04AA6D; /* Green background */
+  cursor: pointer; /* Cursor on hover */
+}
+
+  .Modal {
+    position: absolute;
+    top: 100px;
+    left: 100px;
+    right: 100px;
+    bottom: 100px;
+    backdrop-filter: blur(40px);
+    box-shadow: 0px 0px 50px #0000008a;
+    box-shadow: inset 0px 0px 10px #ffffff33;
+    background: linear-gradient(135deg,rgba(255, 255, 255, 0.164) -20%, rgba(0, 0, 0, 0.375) 50%, rgba(78, 145, 172, 0.273) 130%);
+    border-radius: 10px;
+    background-color: var(--side);
+    padding: 20px
+  }
+
+  .Overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: transparent;
+  }

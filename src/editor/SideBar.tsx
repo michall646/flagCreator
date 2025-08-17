@@ -24,6 +24,7 @@ interface SideBarProps{
     moveBottom : () => void,
     handleFillTypeChange: (value: "linear"|"radial"|"solid") => void,
     showSideBar: boolean,
+    setSideBar: (show: boolean) => void,
 
     setX : (x:number) => void,
     setY : (y:number) => void,
@@ -63,6 +64,7 @@ const SideBar = (props: SideBarProps) => {
   return (
     <div>
     <div className="sidebox" id="sidebar">
+      <button onClick={()=> props.setSideBar(false)}><span style={{color: 'black'}} className="material-symbols-outlined">close</span></button>
       <h3>Fill</h3>
       <Select options={fillOptions} onChange={(x) => props.handleFillTypeChange(x.value)} unstyled classNamePrefix="sel" className="react-select-container"/>
       <Colorful
@@ -72,6 +74,7 @@ const SideBar = (props: SideBarProps) => {
       <h3>Stroke</h3>
       width
       <input
+        className="slider"
         type="range"
         min="0"
         max="20"
@@ -85,19 +88,19 @@ const SideBar = (props: SideBarProps) => {
       />
       <div id="cords-container">
         <div className="input-container">
-          <span>x</span>
+          <span>X</span>
           <input type="number" value={Math.round(props.shape.x * 10) /10  || 0} onChange={(e) =>props.setX(Number(e.target.value))}/>
         </div>
         <div className="input-container">
-          <span>y</span>
+          <span>Y</span>
           <input type="number" value={Math.round(props.shape.y * 10) /10 || 0} onChange={(e) =>props.setY(Number(e.target.value))}/>
         </div>
         <div className="input-container">
-          <span>width</span>
+          <span>Width</span>
           <input type="number" value={Math.round(props.shape.width * 10) /10  || 0} onChange={(e) =>props.setWidth(Number(e.target.value))}/>
         </div>
         <div className="input-container">
-          <span>height</span>
+          <span>Height</span>
           <input type="number" value={Math.round(props.shape.height * 10) /10  || 0} onChange={(e) =>props.setHeight(Number(e.target.value))}/>
         </div>
         </div>
@@ -111,6 +114,7 @@ const SideBar = (props: SideBarProps) => {
       <hr></hr>
       <h3>Corner Radius</h3>
       <input
+      className="slider"
         type="range"
         min="0"
         max="100"
@@ -123,6 +127,7 @@ const SideBar = (props: SideBarProps) => {
         <h3>Sides</h3>
         <input
           type="range"
+          className="slider"
           min="3"
           max="12"
           value={props.shape.sides}
@@ -135,6 +140,7 @@ const SideBar = (props: SideBarProps) => {
         <>
           <h3>Value</h3>
           <input
+            className="textValueField"
             value={props.shape.value}
             onChange={(e) =>props.setValue(e.target.value)}
           />
@@ -147,6 +153,7 @@ const SideBar = (props: SideBarProps) => {
           }}/>
           <h3>Font Size</h3>
           <input
+            className="slider"
             type="range"
             min="5"
             max="300"

@@ -20,6 +20,8 @@ interface listProps {
   setShapes: any,
   selected: string[],
   setSelected: any;
+  export: () => void,
+  import: () => void,
 }
 const ObjectList = (props: listProps) => {
 
@@ -57,7 +59,8 @@ const ObjectList = (props: listProps) => {
 
   return (
     <div id="objectList">
-      <button id="exportButton">Export</button>
+      <button id="importButton" onClick={() => props.import()}>Import</button>
+      <button id="exportButton" onClick={props.export}>Export</button>
       <h3>Objects</h3>
       {props.shapes.map(renderItem)}
     </div>

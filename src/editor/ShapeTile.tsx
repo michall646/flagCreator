@@ -1,5 +1,5 @@
 
-import { Rect, Circle, Stage, Layer } from 'react-konva';
+import { Rect, Circle, Stage, Layer, Ellipse, Path } from 'react-konva';
 import RegPolygon from './RegPolygon';
 import { gradientProps } from '../scripts/getGradientProps';
 import type { Shape } from './ShapeType';
@@ -63,10 +63,23 @@ const ShapeTile = ({shape, change, editingId, setEditingId, selected, handleSele
         const scale = Math.min(scaleX, scaleY);
         const gradient = gradientProps(shape)
         const props = {
+          id: shape.id,
           x: 0,
           y: 0,
           width: shape.width,
           height: shape.height,
+          radiusX: Math.abs(shape.width/2),
+          radiusY: Math.abs(shape.height/2),
+          sides: shape.sides,
+          value: shape.value,
+          cornerRadius: shape.corners,
+          font: shape.font,
+          fontSize: shape.size,
+          data: shape.path,
+          align: shape.align,
+          strokeEnabled: true,
+          strokeWidth: shape.strokeWidth,
+          stroke: shape.strokeColor,
           ...gradient,
           rotation:0,
           scale: {x: scale, y:scale}
@@ -79,7 +92,7 @@ const ShapeTile = ({shape, change, editingId, setEditingId, selected, handleSele
             return <RegPolygon {...props} {...shapeOffset} />
         }
         if(shape.type === "circle"){
-            return <Circle {...props} {...shapeOffset}/>
+            return <Ellipse {...props} {...shapeOffset}/>
         }
 
     }

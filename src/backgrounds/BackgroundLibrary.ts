@@ -77,7 +77,7 @@ const createBackgrounds = (stageWidth: number, stageHeight: number, colors: stri
             corners: 0
         }
     ], stageWidth, stageHeight),
-    createBackground('TwoHorizontal', [
+    createBackground('TwoHorizontalV', [
         {
             type: 'rectangle',
             x: 0,

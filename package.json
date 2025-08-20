@@ -16,6 +16,7 @@
     "@uiw/react-color": "^2.7.2",
     "canvg": "^4.0.3",
     "konva": "^9.3.22",
+    "picomatch": "^4.0.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-edit-text": "^5.1.1",
@@ -26,7 +27,8 @@
     "react-modal": "^3.16.3",
     "react-select": "^5.10.2",
     "use-file-picker": "^2.1.4",
-    "use-image": "^1.1.4"
+    "use-image": "^1.1.4",
+    "yaml": "^2.8.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

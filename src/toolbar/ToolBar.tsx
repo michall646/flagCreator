@@ -1,4 +1,4 @@
-import ToolIcon from "./toolIcon"
+import ToolIcon from "./ToolIcon"
 
 interface ToolBarProps{
     rectangle:() => void,

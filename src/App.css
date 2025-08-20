@@ -37,10 +37,12 @@ body {
   position:fixed;
   backdrop-filter: blur(20px);
   top:10px;
-  border-radius: 10px;
+  border-radius: 30px;
   display: flex;
   flex-direction: row;
   padding: 10px;
+  padding-right: 20px;
+  padding-left: 20px;
   gap: 5px;
   left: 50%;
   transform: translate(-50%, 0);
@@ -186,6 +188,8 @@ input {
   background-color: transparent;
   box-shadow: inset 1px 0px 10px rgba(255, 255, 255, 0.079);
   backdrop-filter: blur(30px);
+  color: white;
+  padding: 5px;
 }
 
 .textValueField {

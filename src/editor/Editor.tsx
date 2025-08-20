@@ -16,6 +16,7 @@ import EditableText from './EditableText';
 import SymbolSelector from '../symbols/SymbolSelector';
 import Modal from 'react-modal';
 import { useFilePicker } from 'use-file-picker';
+import CustomPath from './CustomPath';
 
 const GUIDELINE_OFFSET = 5;
 
@@ -273,8 +274,16 @@ const Editor = () => {
          accept: '.json',
          onFilesSuccessfullySelected: ({filesContent }) => {
             const data = JSON.parse(filesContent[0].content);
+
+            const rescale = (shape: Shape) => {
+                const width = (shape.width/ 1600) * stageWidth;
+                const height = (shape.height/ 1600) * stageHeight;
+                const x = (shape.x/ 1600) * stageWidth;
+                const y = (shape.y/ 1600) * stageWidth;
+                return {...shape, width, height, x, y}
+            }
             console.log(data);
-            setShapes(data.shapes);
+            setShapes(data.shapes.map(rescale));
             setBackground(data.background);
          }
     });
@@ -477,7 +486,7 @@ const Editor = () => {
         }
         else{
             newWidth = node.width() * scaleX
-            newHeight = node.height() * (scaleY / (oldHeight/ oldWidth));
+            newHeight = node.height() * scaleY ;
         }
 
 
@@ -735,9 +744,8 @@ const Editor = () => {
         if(shape.type === "text"){
             return <EditableText key={shape.id} {...props} reference={rectRefs.current[shape.id]}/>
         }
-        console.log(shape.width)
         if(shape.type === "svg"){
-            return <Path scaleX={shape.width/ 300} scaleY={shape.height/300} {...props}/>
+            return <CustomPath scaleX={shape.width/ 300} scaleY={shape.height/300} {...props} reference={rectRefs.current[shape.id]}/>
         }
 
     }
@@ -765,7 +773,7 @@ const Editor = () => {
     const spawnPolygon = (x1:number,x2:number,y1:number,y2:number) => {
         const temp = shapes.slice();
         temp.push({
-            id: `rect-${temp.length}`, // Unique ID for each rectangle
+            id: crypto.randomUUID(), // Unique ID for each rectangle
             x: x1,
             y: y1,
             width: x2 - x1,
@@ -784,7 +792,7 @@ const Editor = () => {
     const spawnCircle = (x1:number,x2:number,y1:number,y2:number) => {
         const temp = shapes.slice();
         temp.push({
-            id: `rect-${temp.length}`, // Unique ID for each rectangle
+            id: crypto.randomUUID(), // Unique ID for each rectangle
             x: x1 + (x2 - x1)/2,
             y: y1 + (y2 - y1)/2,
             width: x2 - x1,
@@ -802,7 +810,7 @@ const Editor = () => {
     const spawnText = (x1:number,x2:number,y1:number,y2:number) => {
         const temp = shapes.slice();
         temp.push({
-            id: `text-${temp.length}`, // Unique ID for each rectangle
+            id: crypto.randomUUID(), // Unique ID for each rectangle
             x: x1 + (x2 - x1)/2,
             y: y1 + (y2 - y1)/2,
             width: x2 - x1,
@@ -827,7 +835,7 @@ const Editor = () => {
         const temp = shapes.slice();
         const x1 = 100, x2 = 200, y1 = 100, y2 = 200
         temp.push({
-            id: `symbol-${temp.length}`, // Unique ID for each rectangle
+            id: crypto.randomUUID(), // Unique ID for each rectangle
             x: x1 + (x2 - x1)/2,
             y: y1 + (y2 - y1)/2,
             width: x2 - x1,
@@ -1285,8 +1293,10 @@ const Editor = () => {
 
     const handlePNGExport = () => {
         if(!stageRef.current) return
+        setSelectedIds([]);
         const dataURL = stageRef.current.toDataURL({
-        pixelRatio: 2 // double resolution
+            width: 1600,
+            height: 1000
         });
         
         const link = document.createElement('a');
